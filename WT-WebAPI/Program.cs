@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NLog.Web;
+using WT_WebAPI.Entities.DBContext;
 
 namespace WT_WebAPI
 {
@@ -20,7 +22,17 @@ namespace WT_WebAPI
             try
             {
                 logger.Debug("init main");
-                BuildWebHost(args).Run();
+
+                var host = BuildWebHost(args);
+
+                using (var scope = host.Services.CreateScope())
+                {
+                    var services = scope.ServiceProvider;
+                    var context = services.GetRequiredService<WorkoutTrackingDBContext>();
+                    DBInitializer.Initialize(context);
+                }
+
+                host.Run();
             }
             catch (Exception ex)
             {
