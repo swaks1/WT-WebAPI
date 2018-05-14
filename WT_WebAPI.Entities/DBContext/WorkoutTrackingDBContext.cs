@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using WT_WebAPI.Entities.WorkoutAssets;
 
 namespace WT_WebAPI.Entities.DBContext
 {
@@ -13,6 +14,8 @@ namespace WT_WebAPI.Entities.DBContext
 
         public DbSet<WTUser> Users { get; set; }
         public DbSet<Exercise> Exercises { get; set; }
-        
+        public DbSet<WorkoutRoutine> WorkoutRoutines { get; set; }
+        public DbSet<WorkoutProgram> WorkoutPrograms { get; set; }
+
     }
 }

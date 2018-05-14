@@ -25,7 +25,12 @@ namespace WT_WebAPI.Controllers
         [HttpGet]
         public IEnumerable<WTUser> GetUsers()
         {
-            return _context.Users.Include(w=>w.Exercises);
+            return _context.Users
+                           .Include(w => w.Exercises)                                
+                           .Include(w => w.WorkoutRoutines)
+                                //.ThenInclude(e => e.ExerciseRoutineEntries)
+                                    //.ThenInclude(e => e.Exercise)
+                           .Include(w => w.WorkoutPrograms);
         }
 
         // GET: api/WTUsers/5
@@ -37,7 +42,7 @@ namespace WT_WebAPI.Controllers
                 return BadRequest(ModelState);
             }
 
-            var wTUser = await _context.Users.SingleOrDefaultAsync(m => m.WTUserID == id);
+            var wTUser = await _context.Users.SingleOrDefaultAsync(m => m.ID == id);
 
             if (wTUser == null)
             {
@@ -56,7 +61,7 @@ namespace WT_WebAPI.Controllers
                 return BadRequest(ModelState);
             }
 
-            if (id != wTUser.WTUserID)
+            if (id != wTUser.ID)
             {
                 return BadRequest();
             }
@@ -94,7 +99,7 @@ namespace WT_WebAPI.Controllers
             _context.Users.Add(wTUser);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetWTUser", new { id = wTUser.WTUserID }, wTUser);
+            return CreatedAtAction("GetWTUser", new { id = wTUser.ID }, wTUser);
         }
 
         // DELETE: api/WTUsers/5
@@ -106,7 +111,7 @@ namespace WT_WebAPI.Controllers
                 return BadRequest(ModelState);
             }
 
-            var wTUser = await _context.Users.SingleOrDefaultAsync(m => m.WTUserID == id);
+            var wTUser = await _context.Users.SingleOrDefaultAsync(m => m.ID == id);
             if (wTUser == null)
             {
                 return NotFound();
@@ -120,7 +125,7 @@ namespace WT_WebAPI.Controllers
 
         private bool WTUserExists(int id)
         {
-            return _context.Users.Any(e => e.WTUserID == id);
+            return _context.Users.Any(e => e.ID == id);
         }
     }
 }
