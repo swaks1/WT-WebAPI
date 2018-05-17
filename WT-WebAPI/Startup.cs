@@ -1,18 +1,21 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Swashbuckle.AspNetCore.Swagger;
+using WT_WebAPI.Common;
 using WT_WebAPI.Entities.DBContext;
+using WT_WebAPI.Repository;
+using WT_WebAPI.Repository.Interfaces;
 
 namespace WT_WebAPI
 {
@@ -30,10 +33,16 @@ namespace WT_WebAPI
         {
             services.AddDbContext<WorkoutTrackingDBContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
+
+
+            services.AddScoped<ICommonRepository, CommonRepository>();
+
             services.AddMvc().AddJsonOptions(options => {
                 options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
                 options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
             }); ;
+
+            services.AddAutoMapper(x => x.AddProfile(new MappingsProfile()));
 
             services.AddSwaggerGen(c =>
             {
@@ -50,6 +59,8 @@ namespace WT_WebAPI
                 app.UseDeveloperExceptionPage();
             }
 
+            #region Swagger
+
             // Enable middleware to serve generated Swagger as a JSON endpoint.
             app.UseSwagger();
 
@@ -60,6 +71,8 @@ namespace WT_WebAPI
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
             });
 
+            #endregion
+         
             app.UseMvc();
         }
     }

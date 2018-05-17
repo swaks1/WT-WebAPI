@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WT_WebAPI.Entities;
 using WT_WebAPI.Entities.DBContext;
+using WT_WebAPI.Entities.DTO;
+using WT_WebAPI.Repository;
+using WT_WebAPI.Repository.Interfaces;
 
 namespace WT_WebAPI.Controllers
 {
@@ -14,118 +18,91 @@ namespace WT_WebAPI.Controllers
     [Route("api/WTUsers")]
     public class WTUsersController : Controller
     {
-        private readonly WorkoutTrackingDBContext _context;
+        private readonly ICommonRepository _repository;
 
-        public WTUsersController(WorkoutTrackingDBContext context)
+        public WTUsersController(ICommonRepository repository)
         {
-            _context = context;
+            _repository = repository;
         }
 
-        // GET: api/WTUsers
-        [HttpGet]
-        public IEnumerable<WTUser> GetUsers()
-        {
-            return _context.Users
-                           .Include(w => w.Exercises)                                
-                           .Include(w => w.WorkoutRoutines)
-                                //.ThenInclude(e => e.ExerciseRoutineEntries)
-                                    //.ThenInclude(e => e.Exercise)
-                           .Include(w => w.WorkoutPrograms);
-        }
-
-        // GET: api/WTUsers/5
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetWTUser([FromRoute] int id)
+        [HttpGet("{username}")]
+        public async Task<IActionResult> GetWTUser([FromRoute] string username)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var wTUser = await _context.Users.SingleOrDefaultAsync(m => m.ID == id);
+            var wTUser = await _repository.GetUserByUsername(username);
 
             if (wTUser == null)
             {
                 return NotFound();
             }
 
-            return Ok(wTUser);
+            var mappedUser = Mapper.Map<WTUserDTO>(wTUser);
+            return Ok(mappedUser);
+
         }
 
-        // PUT: api/WTUsers/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutWTUser([FromRoute] int id, [FromBody] WTUser wTUser)
+        [HttpGet("FullInfo/{username}")]
+        public async Task<IActionResult> GetWTUserFullInfo([FromRoute] string username)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            if (id != wTUser.ID)
+            var wTUser = await _repository.GetUserByUsernameFullInfo(username);
+
+            if (wTUser == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            _context.Entry(wTUser).State = EntityState.Modified;
+            var mappedUser = Mapper.Map<WTUserDTO>(wTUser);
+            return Ok(mappedUser);
 
-            try
+        }
+
+        [HttpPut("{username}")]
+        public async Task<IActionResult> PutWTUser([FromRoute] string username, [FromBody] WTUserDTO wTUser)
+        {
+            if (!ModelState.IsValid)
             {
-                await _context.SaveChangesAsync();
+                return BadRequest(ModelState);
             }
-            catch (DbUpdateConcurrencyException)
+
+            wTUser.Username = username;
+            var result = await _repository.UpdateUser(wTUser);
+
+            if(result == false)
             {
-                if (!WTUserExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return NotFound();
             }
 
             return NoContent();
         }
 
-        // POST: api/WTUsers
-        [HttpPost]
-        public async Task<IActionResult> PostWTUser([FromBody] WTUser wTUser)
+
+        [HttpDelete("{username}")]
+        public async Task<IActionResult> DeleteWTUser([FromRoute] string username)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            _context.Users.Add(wTUser);
-            await _context.SaveChangesAsync();
+            var result = await _repository.DeleteUser(username);
 
-            return CreatedAtAction("GetWTUser", new { id = wTUser.ID }, wTUser);
-        }
-
-        // DELETE: api/WTUsers/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteWTUser([FromRoute] int id)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            var wTUser = await _context.Users.SingleOrDefaultAsync(m => m.ID == id);
-            if (wTUser == null)
+            if (result == false)
             {
                 return NotFound();
             }
 
-            _context.Users.Remove(wTUser);
-            await _context.SaveChangesAsync();
-
-            return Ok(wTUser);
+            return NoContent();
         }
 
-        private bool WTUserExists(int id)
-        {
-            return _context.Users.Any(e => e.ID == id);
-        }
+
     }
 }

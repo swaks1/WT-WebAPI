@@ -5,10 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="6.2.2" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="3.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.8" />
     <PackageReference Include="NLog" Version="4.5.4" />
     <PackageReference Include="NLog.Web.AspNetCore" Version="4.5.4" />
@@ -20,7 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\WT_WebAPI.Entities.DTO\WT_WebAPI.Entities.DTO.csproj" />
     <ProjectReference Include="..\WT_WebAPI.Entities\WT_WebAPI.Entities.csproj" />
+    <ProjectReference Include="..\WT_WebAPI.Repository\WT_WebAPI.Repository.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -5,12 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Migrations\20180517181625_nav_properies_to_WTUser.cs" />
-  </ItemGroup>
-
-
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="2.0.3" />
@@ -19,5 +13,10 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer.Design" Version="1.1.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.0.3" />
   </ItemGroup>
-  
+
+  <ItemGroup>
+    <ProjectReference Include="..\WT_WebAPI.Entities.DTO\WT_WebAPI.Entities.DTO.csproj" />
+    <ProjectReference Include="..\WT_WebAPI.Entities\WT_WebAPI.Entities.csproj" />
+  </ItemGroup>
+
 </Project>
