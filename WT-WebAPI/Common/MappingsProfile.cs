@@ -17,6 +17,8 @@ namespace WT_WebAPI.Common
         public MappingsProfile()
         {
             CreateMap<WTUser, WTUserDTO>();
+            CreateMap<WTUserDTO, WTUser>();
+
             CreateMap<WorkoutRoutine, WorkoutRoutineDTO>().ForMember(dest => dest.Exercises,
                                                                        opts => opts.MapFrom(src => src.ExerciseRoutineEntries.Select(ex => ex.Exercise)));
 
@@ -27,7 +29,12 @@ namespace WT_WebAPI.Common
                                                opts => opts.MapFrom(src => src.ExerciseSessionEntries.Select(ex => ex.Exercise)));
 
             CreateMap<Exercise, ExerciseDTO>();//.ForMember(dest => dest.User, opt => opt.Ignore());
+            CreateMap<ExerciseDTO, Exercise>();
 
+            CreateMap<ExerciseAttribute, ExerciseAttributeDTO>();
+            CreateMap<ExerciseAttributeDTO, ExerciseAttribute>();
+
+            
             CreateMap<BodyStatistic, BodyStatisticDTO>();
         }
     }

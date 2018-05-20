@@ -1,10 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using WT_WebAPI.Entities;
 using WT_WebAPI.Entities.DBContext;
-using WT_WebAPI.Entities.DTO;
+using WT_WebAPI.Entities.WorkoutAssets;
 using WT_WebAPI.Repository.Interfaces;
 
 namespace WT_WebAPI.Repository
@@ -20,93 +21,137 @@ namespace WT_WebAPI.Repository
 
 
         #region Users
-            public async Task<WTUser> GetUserByUsername(string username)
-            {
-                return await _context.Users
-                                .Where(user => user.Username == username)
+
+        public async Task<WTUser> GetUserByUsername(string username)
+        {
+            return await _context.Users
+                            .AsNoTracking()
+                            .SingleOrDefaultAsync(user => user.Username == username);
+        }
+
+        public async Task<WTUser> GetUserByUserId(int? userId)
+        {
+            return await _context.Users
+                            .AsNoTracking()
+                            .SingleOrDefaultAsync(user => user.ID == userId);
+        }
+
+        public async Task<WTUser> GetUserByUsernameFullInfo(string username)
+        {
+            return await _context.Users
+                                .Include(w => w.Exercises)
+                                    .ThenInclude(e => e.Attributes)
+                                .Include(w => w.Exercises)
+                                    .ThenInclude(e => e.ExerciseRoutineEntries)
+                                .Include(w => w.WorkoutRoutines)
+                                    .ThenInclude(e => e.ExerciseRoutineEntries)
+                                .Include(w => w.WorkoutPrograms)
+                                    .ThenInclude(e => e.RoutineProgramEntries)
+                                .Include(w => w.WorkoutSession)
+                                    .ThenInclude(s => s.ExerciseSessionEntries)
+                                .Include(w => w.BodyStatistics)
+                                    .ThenInclude(s => s.BodyStatAttributes)
+                                .Include(w => w.BodyStatistics)
+                                    .ThenInclude(s => s.ProgressImages)
                                 .AsNoTracking()
-                                .SingleOrDefaultAsync();
+                                .SingleOrDefaultAsync(user => user.Username == username);
+        }
+
+        public async Task<bool> UpdateUser(WTUser user)
+        {
+            //_context.Entry(wTUser).State = EntityState.Modified;
+            var entity = await _context.Users
+                            .Where(u => u.Username == user.Username)
+                            .SingleOrDefaultAsync();
+
+            if (entity == null)
+            {
+                return false;
             }
 
-            public async Task<WTUser> GetUserByUsernameFullInfo(string username)
+            entity.FirstName = user.FirstName;
+            entity.Email = user.Email;
+            entity.LastName = user.LastName;
+            entity.NotificationActivated = user.NotificationActivated;
+
+            try
             {
-                return await _context.Users
-                                    .Include(w => w.Exercises)
-                                        .ThenInclude(e => e.Attributes)
-                                    .Include(w => w.Exercises)
-                                        .ThenInclude(e => e.ExerciseRoutineEntries)
-                                    .Include(w => w.WorkoutRoutines)
-                                        .ThenInclude(e => e.ExerciseRoutineEntries)
-                                    .Include(w => w.WorkoutPrograms)
-                                        .ThenInclude(e => e.RoutineProgramEntries)
-                                    .Include(w => w.WorkoutSession)
-                                        .ThenInclude(s => s.ExerciseSessionEntries)
-                                    .Include(w => w.BodyStatistics)
-                                        .ThenInclude(s => s.BodyStatAttributes)
-                                    .Include(w => w.BodyStatistics)
-                                        .ThenInclude(s => s.ProgressImages)
-                                    .AsNoTracking()
-                                    .SingleOrDefaultAsync(user => user.Username == username);
+                int x = await _context.SaveChangesAsync();
             }
-
-            public async Task<bool> UpdateUser(WTUserDTO user)
+            catch (DbUpdateConcurrencyException)
             {
-                //_context.Entry(wTUser).State = EntityState.Modified;
-                var entity = await _context.Users
-                                .Where(u => u.Username == user.Username)
-                                .SingleOrDefaultAsync();
-
-                if (entity == null)
+                if (!(await UserExists(entity.Username)))
                 {
                     return false;
                 }
-
-                entity.FirstName = user.FirstName;
-                entity.Email = user.Email;
-                entity.LastName = user.LastName;
-                entity.NotificationActivated = user.NotificationActivated;
-
-                try
+                else
                 {
-                    int x = await _context.SaveChangesAsync();
+                    throw;
                 }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!(await UserExists(entity.Username)))
-                    {
-                        return false;
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-
-                return true;
             }
 
-            public async Task<bool> DeleteUser(string username)
+            return true;
+        }
+
+        public async Task<bool> DeleteUser(string username)
+        {
+            var wTUser = await _context.Users.SingleOrDefaultAsync(m => m.Username == username);
+            if (wTUser == null)
             {
-                var wTUser = await _context.Users.SingleOrDefaultAsync(m => m.Username == username);
-                if (wTUser == null)
-                {
-                    return false;
-                }
-
-                //_context.Users.Remove(wTUser);            
-
-                wTUser.Active = false;
-                await _context.SaveChangesAsync();
-
-                return true;
+                return false;
             }
 
-            public async Task<bool> UserExists(string username)
-            {
-                return await _context.Users.AnyAsync(e => e.Username == username);
+            //_context.Users.Remove(wTUser);            
 
-            }
+            wTUser.Active = false;
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> UserExists(string username)
+        {
+            return await _context.Users.AnyAsync(e => e.Username == username);
+
+        }
+
+        public async Task<bool> UserExists(int? userId)
+        {
+            return await _context.Users.AnyAsync(e => e.ID == userId);
+        }
+
         #endregion
 
+        public async Task<IEnumerable<Exercise>> GetExercisesFromUser(int? userId)
+        {
+            return await _context.Exercises
+                                .AsNoTracking()
+                                .Include(e => e.Attributes)
+                                .Where(e => e.WTUserID == userId)
+                                .ToListAsync();
+        }
+
+        public async Task<bool> AddExerciseForUser(int? userId, Exercise exercise)
+        {
+            var user = await GetUserByUserId(userId);
+
+            if (user == null)
+                return false;
+
+            exercise.WTUserID = userId;
+            _context.Exercises.Add(exercise);
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<Exercise> GetExercise(int? exerciseID)
+        {
+            return await _context.Exercises
+                            .AsNoTracking()
+                            .Include(e=>e.Attributes)
+                            .SingleOrDefaultAsync(e => e.ID == exerciseID);
+        }
     }
 }
