@@ -27,5 +27,7 @@ namespace WT_WebAPI.Repository.Interfaces
         Task<Exercise> GetExercise(int? userId);
 
         Task<bool> AddExerciseForUser(int? userId, Exercise exercise);
+
+        Task<bool> UpdateExercise(Exercise exercise);
     }
 }

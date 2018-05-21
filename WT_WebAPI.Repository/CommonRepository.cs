@@ -122,6 +122,9 @@ namespace WT_WebAPI.Repository
 
         #endregion
 
+
+        #region Exercises
+
         public async Task<IEnumerable<Exercise>> GetExercisesFromUser(int? userId)
         {
             return await _context.Exercises
@@ -138,7 +141,12 @@ namespace WT_WebAPI.Repository
             if (user == null)
                 return false;
 
+            exercise.ID = 0;
             exercise.WTUserID = userId;
+            foreach (var attr in exercise.Attributes)
+            {
+                attr.ID = 0;
+            }
             _context.Exercises.Add(exercise);
 
             await _context.SaveChangesAsync();
@@ -153,5 +161,53 @@ namespace WT_WebAPI.Repository
                             .Include(e=>e.Attributes)
                             .SingleOrDefaultAsync(e => e.ID == exerciseID);
         }
+
+        public async Task<bool> UpdateExercise(Exercise exercise)
+        {
+            var exerciseEntity = await _context.Exercises
+                                                .Include(e => e.Attributes)
+                                                .SingleOrDefaultAsync(e => e.ID == exercise.ID);
+
+            if (exerciseEntity == null || exerciseEntity.WTUserID != exercise.WTUserID)
+                return false;
+
+            //remove attributes that arent present
+            var attrToBeRemoved = exerciseEntity.Attributes.Where(attr => !exercise.Attributes.Any(a => a.ID == attr.ID)).ToList();
+            _context.RemoveRange(attrToBeRemoved);
+
+            //update existing and make list for new attributes
+            List<ExerciseAttribute> toBeAdded = new List<ExerciseAttribute>();
+            foreach(var attribute in exercise.Attributes) 
+            {
+                var attrEntity = exerciseEntity.Attributes.FirstOrDefault(a => a.ID == attribute.ID);
+                if (attrEntity != null)
+                {
+                    attrEntity.AttributeValue = attribute.AttributeValue;
+                    attrEntity.AttributeName = attribute.AttributeName;                   
+                }
+                else
+                {
+                    attribute.ID = 0;
+                    toBeAdded.Add(attribute);
+                }
+            }
+
+            //add new attributes
+            foreach(var attribute in toBeAdded)
+            {
+                exerciseEntity.Attributes.Add(attribute);
+            }
+
+
+            exerciseEntity.Category = exercise.Category;
+            exerciseEntity.Description = exercise.Description;
+            exerciseEntity.Name = exercise.Name;
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        #endregion
     }
 }

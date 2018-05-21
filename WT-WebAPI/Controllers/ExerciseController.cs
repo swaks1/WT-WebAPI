@@ -94,7 +94,7 @@ namespace WT_WebAPI.Controllers
 
             if (result == false)
             {
-                return BadRequest("Update Failed...");
+                return BadRequest("Add Failed...");
             }
 
             var exerciseToReturn = Mapper.Map<ExerciseDTO>(exerciseEntity);
@@ -110,5 +110,29 @@ namespace WT_WebAPI.Controllers
         }
 
 
+        [HttpPut("user/{userId}",Name = "UpdateExercise")]
+        public async Task<IActionResult> UpdateExercise([FromRoute] int? userId, [FromBody] ExerciseDTO exerciseDTO)
+        {
+            if (userId == null)
+            {
+                return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return new UnprocessableEntityObjectResult(ModelState);
+            }
+
+            exerciseDTO.WTUserID = userId;
+            var wtUserEntity = Mapper.Map<Exercise>(exerciseDTO);
+            var result = await _repository.UpdateExercise(wtUserEntity);
+
+            if (result == false)
+            {
+                return BadRequest("Update failed...");
+            }
+
+            return NoContent();
+        }
     }
 }
