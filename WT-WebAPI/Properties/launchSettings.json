@@ -21,9 +21,27 @@
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {
+        "ASPNETCORE_URLS": "http://localhost:8080",
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "applicationUrl": "http://localhost:51221/"
+    },
+    "Kestrel Development": {
+      "executablePath": "dotnet run",
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_URLS": "http://localhost:8080",
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "Kestrel Production": {
+      "executablePath": "dotnet run",
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_URLS": "http://localhost:8080",
+        "ASPNETCORE_ENVIRONMENT": "Production"
+      }
     }
+
   }
 }

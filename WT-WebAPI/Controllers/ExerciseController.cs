@@ -110,10 +110,10 @@ namespace WT_WebAPI.Controllers
         }
 
 
-        [HttpPut("user/{userId}",Name = "UpdateExercise")]
-        public async Task<IActionResult> UpdateExercise([FromRoute] int? userId, [FromBody] ExerciseDTO exerciseDTO)
+        [HttpPut("user/{userId}/exercise/{exerciseId}", Name = "UpdateExercise")]
+        public async Task<IActionResult> UpdateExercise([FromRoute] int? userId, [FromRoute] int? exerciseId,[FromBody] ExerciseDTO exerciseDTO)
         {
-            if (userId == null)
+            if (userId == null || exerciseId == null)
             {
                 return BadRequest();
             }
@@ -124,6 +124,7 @@ namespace WT_WebAPI.Controllers
             }
 
             exerciseDTO.WTUserID = userId;
+            exerciseDTO.ID = (int)exerciseId;
             var wtUserEntity = Mapper.Map<Exercise>(exerciseDTO);
             var result = await _repository.UpdateExercise(wtUserEntity);
 
@@ -131,6 +132,32 @@ namespace WT_WebAPI.Controllers
             {
                 return BadRequest("Update failed...");
             }
+
+            return NoContent();
+        }
+
+
+        [HttpPost("user/{userId}/exercise/{exerciseId}/attributes", Name = "AddOrUpdateAttributes")]
+        public async Task<IActionResult> PostAttributes([FromRoute]int? userId, [FromRoute] int? exerciseId, [FromBody] List<ExerciseAttributeDTO> exerciseAttributesDTO)
+        {
+            if (userId == null || exerciseId == null)
+            {
+                return BadRequest();
+            }
+            if (!ModelState.IsValid)
+            {
+                return new UnprocessableEntityObjectResult(ModelState);
+            }
+
+            exerciseAttributesDTO.ForEach(item => item.ExerciseID = exerciseId);
+            var exerciseAttributesEntities = Mapper.Map<List<ExerciseAttribute>>(exerciseAttributesDTO);
+            var result = await _repository.AddOrUpdateAttributes(exerciseAttributesEntities);
+
+            if (result == false)
+            {
+                return BadRequest("Add or Update of Attributes Failed...");
+            }
+
 
             return NoContent();
         }

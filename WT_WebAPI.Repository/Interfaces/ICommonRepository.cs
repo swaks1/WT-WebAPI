@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using WT_WebAPI.Entities;
+using WT_WebAPI.Entities.DTO.WorkoutAssets;
 using WT_WebAPI.Entities.WorkoutAssets;
 
 namespace WT_WebAPI.Repository.Interfaces
@@ -22,6 +23,7 @@ namespace WT_WebAPI.Repository.Interfaces
         Task<bool> UserExists(int? userId);
 
 
+
         Task<IEnumerable<Exercise>> GetExercisesFromUser(int? userId);
 
         Task<Exercise> GetExercise(int? userId);
@@ -29,5 +31,15 @@ namespace WT_WebAPI.Repository.Interfaces
         Task<bool> AddExerciseForUser(int? userId, Exercise exercise);
 
         Task<bool> UpdateExercise(Exercise exercise);
+
+        Task<bool> AddOrUpdateAttributes(List<ExerciseAttribute> exerciseAttributesEntities);
+
+
+
+        Task<IEnumerable<WorkoutRoutine>> GetRoutinesFromUser(int? userId);
+
+        Task<WorkoutRoutine> GetRoutine(int? routineId);
+
+        Task<bool> AddRoutineForUser(int? userId, WorkoutRoutine routineDto);
     }
 }

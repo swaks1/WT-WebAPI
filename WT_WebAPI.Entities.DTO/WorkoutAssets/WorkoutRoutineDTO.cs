@@ -17,6 +17,7 @@ namespace WT_WebAPI.Entities.DTO.WorkoutAssets
         public int? WTUserID { get; set; }
 
         public ICollection<ExerciseDTO> Exercises { get; set; }
+        public ICollection<int> ProgramsIds { get; set; }
     }
     
 }
