@@ -111,7 +111,7 @@ namespace WT_WebAPI.Controllers
 
 
         [HttpPut("user/{userId}/exercise/{exerciseId}", Name = "UpdateExercise")]
-        public async Task<IActionResult> UpdateExercise([FromRoute] int? userId, [FromRoute] int? exerciseId,[FromBody] ExerciseDTO exerciseDTO)
+        public async Task<IActionResult> UpdateExercise([FromRoute] int? userId, [FromRoute] int? exerciseId, [FromBody] ExerciseDTO exerciseDTO)
         {
             if (userId == null || exerciseId == null)
             {
@@ -151,13 +151,61 @@ namespace WT_WebAPI.Controllers
 
             exerciseAttributesDTO.ForEach(item => item.ExerciseID = exerciseId);
             var exerciseAttributesEntities = Mapper.Map<List<ExerciseAttribute>>(exerciseAttributesDTO);
-            var result = await _repository.AddOrUpdateAttributes(exerciseAttributesEntities);
+
+            var result = await _repository.AddOrUpdateAttributes(userId, exerciseId, exerciseAttributesEntities);
 
             if (result == false)
             {
                 return BadRequest("Add or Update of Attributes Failed...");
             }
 
+
+            return NoContent();
+        }
+
+        [HttpDelete("user/{userId}/exercise/{exerciseId}")]
+        public async Task<IActionResult> DeleteExercise([FromRoute] int? userId, [FromRoute] int? exerciseId)
+        {
+            if (userId == null || exerciseId == null)
+            {
+                return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return new UnprocessableEntityObjectResult(ModelState);
+            }
+
+            var result = await _repository.DeleteExercise(userId, exerciseId);
+
+            if (result == false)
+            {
+                return NotFound();
+            }
+
+            return NoContent();
+        }
+
+
+        [HttpDelete("user/{userId}/exercise/{exerciseId}/attribute/{attributeId}")]
+        public async Task<IActionResult> DeleteAttribute([FromRoute] int? userId, [FromRoute] int? exerciseId, [FromRoute] int? attributeId)
+        {
+            if (userId == null || exerciseId == null || attributeId == null)
+            {
+                return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return new UnprocessableEntityObjectResult(ModelState);
+            }
+
+            var result = await _repository.DeleteAttribite(userId, exerciseId, attributeId);
+
+            if (result == false)
+            {
+                return NotFound();
+            }
 
             return NoContent();
         }

@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <Compile Remove="Migrations\20180517181625_nav_properies_to_WTUser.cs" />
+    <Compile Remove="Migrations\20180524000641_added_Join_tables.cs" />
   </ItemGroup>
 
 

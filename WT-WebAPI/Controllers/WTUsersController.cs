@@ -84,7 +84,7 @@ namespace WT_WebAPI.Controllers
             var wtUserEntity = Mapper.Map<WTUser>(wTUser);
             var result = await _repository.UpdateUser(wtUserEntity);
 
-            if(result == false)
+            if (result == false)
             {
                 return NotFound();
             }

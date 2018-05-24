@@ -73,7 +73,6 @@ namespace WT_WebAPI.Controllers
         }
 
 
-
         [HttpPost("user/{userId}", Name = "PostRoutine")]
         public async Task<IActionResult> PostRoutine([FromRoute]int? userId, [FromBody] WorkoutRoutineDTO routineDto)
         {
@@ -112,56 +111,104 @@ namespace WT_WebAPI.Controllers
         }
 
 
-        //[HttpPut("user/{userId}/exercise/{exerciseId}", Name = "UpdateExercise")]
-        //public async Task<IActionResult> UpdateExercise([FromRoute] int? userId, [FromRoute] int? exerciseId, [FromBody] ExerciseDTO exerciseDTO)
-        //{
-        //    if (userId == null || exerciseId == null)
-        //    {
-        //        return BadRequest();
-        //    }
+        [HttpPut("user/{userId}/routine/{routineId}", Name = "UpdateRoutine")]
+        public async Task<IActionResult> UpdateRoutine([FromRoute] int? userId, [FromRoute] int? routineId, [FromBody] WorkoutRoutineDTO routineDto)
+        {
+            if (userId == null || routineId == null)
+            {
+                return BadRequest();
+            }
 
-        //    if (!ModelState.IsValid)
-        //    {
-        //        return new UnprocessableEntityObjectResult(ModelState);
-        //    }
+            if (!ModelState.IsValid)
+            {
+                return new UnprocessableEntityObjectResult(ModelState);
+            }
 
-        //    exerciseDTO.WTUserID = userId;
-        //    exerciseDTO.ID = (int)exerciseId;
-        //    var wtUserEntity = Mapper.Map<Exercise>(exerciseDTO);
-        //    var result = await _repository.UpdateExercise(wtUserEntity);
+            routineDto.WTUserID = userId;
+            routineDto.ID = (int)routineId;
+            var wtURoutineEntity = Mapper.Map<WorkoutRoutine>(routineDto);
+            var result = await _repository.UpdateRoutine(wtURoutineEntity);
 
-        //    if (result == false)
-        //    {
-        //        return BadRequest("Update failed...");
-        //    }
+            if (result == false)
+            {
+                return BadRequest("Update failed for routine...");
+            }
 
-        //    return NoContent();
-        //}
-
-
-        //[HttpPost("user/{userId}/exercise/{exerciseId}/attributes", Name = "AddOrUpdateAttributes")]
-        //public async Task<IActionResult> PostAttributes([FromRoute]int? userId, [FromRoute] int? exerciseId, [FromBody] List<ExerciseAttributeDTO> exerciseAttributesDTO)
-        //{
-        //    if (userId == null || exerciseId == null)
-        //    {
-        //        return BadRequest();
-        //    }
-        //    if (!ModelState.IsValid)
-        //    {
-        //        return new UnprocessableEntityObjectResult(ModelState);
-        //    }
-
-        //    exerciseAttributesDTO.ForEach(item => item.ExerciseID = exerciseId);
-        //    var exerciseAttributesEntities = Mapper.Map<List<ExerciseAttribute>>(exerciseAttributesDTO);
-        //    var result = await _repository.AddOrUpdateAttributes(exerciseAttributesEntities);
-
-        //    if (result == false)
-        //    {
-        //        return BadRequest("Add or Update of Attributes Failed...");
-        //    }
+            return NoContent();
+        }
 
 
-        //    return NoContent();
-        //}
+        [HttpPost("user/{userId}/routine/{routineId}/exercises", Name = "UpdateExercisesForRoutine")]
+        public async Task<IActionResult> UpdateExercisesForRoutine([FromRoute]int? userId, [FromRoute] int? routineId, [FromBody] List<int> exerciseIds)
+        {
+            if (userId == null || routineId == null)
+            {
+                return BadRequest();
+            }
+            if (!ModelState.IsValid)
+            {
+                return new UnprocessableEntityObjectResult(ModelState);
+            }
+
+            var exerciseRoutineEntity = exerciseIds.Select(id => new ExerciseRoutineEntry { WorkoutRoutineID = routineId, ExerciseID = id });
+            var result = await _repository.UpdateExercisesForRoutine(userId, routineId, exerciseRoutineEntity.ToList());
+
+            if (result == false)
+            {
+                return BadRequest("Update of Exercises for Routine Failed...");
+            }
+
+
+            return NoContent();
+        }
+
+
+        [HttpPost("user/{userId}/routine/{routineId}/programs", Name = "UpdateProgramsForRoutine")]
+        public async Task<IActionResult> UpdateProgramsForRoutine([FromRoute]int? userId, [FromRoute] int? routineId, [FromBody] List<int> programIds)
+        {
+            if (userId == null || routineId == null)
+            {
+                return BadRequest();
+            }
+            if (!ModelState.IsValid)
+            {
+                return new UnprocessableEntityObjectResult(ModelState);
+            }
+
+            var programRoutineEntity = programIds.Select(id => new RoutineProgramEntry { WorkoutRoutineID = routineId, WorkoutProgramID = id });
+            var result = await _repository.UpdateProgramsForRoutine(userId, routineId, programRoutineEntity.ToList());
+
+            if (result == false)
+            {
+                return BadRequest("Update of Programs for Routine Failed...");
+            }
+
+
+            return NoContent();
+        }
+
+
+        [HttpDelete("user/{userId}/routine/{routineId}")]
+        public async Task<IActionResult> DeleteRoutine([FromRoute] int? userId, [FromRoute] int? routineId)
+        {
+            if (userId == null || routineId == null)
+            {
+                return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return new UnprocessableEntityObjectResult(ModelState);
+            }
+
+            var result = await _repository.DeleteRoutine(userId, routineId);
+
+            if (result == false)
+            {
+                return NotFound();
+            }
+
+            return NoContent();
+        }
     }
 }

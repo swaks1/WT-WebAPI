@@ -32,14 +32,31 @@ namespace WT_WebAPI.Repository.Interfaces
 
         Task<bool> UpdateExercise(Exercise exercise);
 
-        Task<bool> AddOrUpdateAttributes(List<ExerciseAttribute> exerciseAttributesEntities);
+        Task<bool> AddOrUpdateAttributes(int? userId, int? exerciseID, List<ExerciseAttribute> exerciseAttributes);
 
+        Task<bool> AddOrUpdateAttributes(Exercise exerciseEntity, List<ExerciseAttribute> exerciseAttributes);
+
+        Task<bool> DeleteExercise(int? userId, int? exerciseID);
+
+        Task<bool> DeleteAttribite(int? userId, int? exerciseID, int? attributeId);
 
 
         Task<IEnumerable<WorkoutRoutine>> GetRoutinesFromUser(int? userId);
 
         Task<WorkoutRoutine> GetRoutine(int? routineId);
 
-        Task<bool> AddRoutineForUser(int? userId, WorkoutRoutine routineDto);
+        Task<bool> AddRoutineForUser(int? userId, WorkoutRoutine routine);
+
+        Task<bool> UpdateRoutine(WorkoutRoutine routine);
+
+        Task<bool> UpdateExercisesForRoutine(int? userId, int? routineId, List<ExerciseRoutineEntry> routineExercises);
+
+        Task<bool> UpdateExercisesForRoutine(WorkoutRoutine routineEntity, List<ExerciseRoutineEntry> routineExercises);
+
+        Task<bool> UpdateProgramsForRoutine(int? userId, int? routineId, List<RoutineProgramEntry> routinePrograms);
+
+        Task<bool> UpdateProgramsForRoutine(WorkoutRoutine routineEntity, List<RoutineProgramEntry> routinePrograms);
+
+        Task<bool> DeleteRoutine(int? userId, int? routineID);
     }
 }

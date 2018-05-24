@@ -159,7 +159,7 @@ namespace WT_WebAPI.Repository
         {
             return await _context.Exercises
                             .AsNoTracking()
-                            .Include(e=>e.Attributes)
+                            .Include(e => e.Attributes)
                             .SingleOrDefaultAsync(e => e.ID == exerciseID);
         }
 
@@ -175,7 +175,7 @@ namespace WT_WebAPI.Repository
             //Add or Update Attributes first
             exercise.Attributes.ToList().ForEach(item => item.ExerciseID = exercise.ID);
 
-            var updateAttributesResult = await AddOrUpdateAttributes(exercise.Attributes.ToList());
+            var updateAttributesResult = await AddOrUpdateAttributes(exerciseEntity, exercise.Attributes.ToList());
             if (updateAttributesResult == false)
                 return false;
 
@@ -189,27 +189,32 @@ namespace WT_WebAPI.Repository
             return true;
         }
 
-        public async Task<bool> AddOrUpdateAttributes(List<ExerciseAttribute> exerciseAttributesEntities)
+        public async Task<bool> AddOrUpdateAttributes(int? userId, int? exerciseID, List<ExerciseAttribute> exerciseAttributes)
         {
-            var exerciseId = exerciseAttributesEntities.FirstOrDefault()?.ExerciseID;
-            
-            if (exerciseId == null)
-                return false;
-
             var exerciseEntity = await _context.Exercises
-                                    .Include(e => e.Attributes)
-                                    .SingleOrDefaultAsync(e => e.ID == exerciseId);
+                                        .Include(e => e.Attributes)
+                                        .SingleOrDefaultAsync(e => e.ID == exerciseID);
 
+            if (exerciseEntity == null || exerciseEntity.WTUserID != userId)
+            {
+                return false;
+            }
+
+            return await AddOrUpdateAttributes(exerciseEntity, exerciseAttributes);
+        }
+
+        public async Task<bool> AddOrUpdateAttributes(Exercise exerciseEntity, List<ExerciseAttribute> exerciseAttributes)
+        {
             if (exerciseEntity == null)
                 return false;
 
             //remove attributes that arent present
-            var attrToBeRemoved = exerciseEntity.Attributes.Where(attr => !exerciseAttributesEntities.Any(a => a.ID == attr.ID)).ToList();
+            var attrToBeRemoved = exerciseEntity.Attributes.Where(attr => !exerciseAttributes.Any(a => a.ID == attr.ID)).ToList();
             _context.RemoveRange(attrToBeRemoved);
 
             //update existing and make list for new attributes
             List<ExerciseAttribute> toBeAdded = new List<ExerciseAttribute>();
-            foreach (var attribute in exerciseAttributesEntities)
+            foreach (var attribute in exerciseAttributes)
             {
                 var attrEntity = exerciseEntity.Attributes.FirstOrDefault(a => a.ID == attribute.ID);
                 if (attrEntity != null)
@@ -235,9 +240,51 @@ namespace WT_WebAPI.Repository
             return true;
         }
 
+        public async Task<bool> DeleteExercise(int? userId, int? exerciseID)
+        {
+            var exerciseEntity = await _context.Exercises
+                                               .SingleOrDefaultAsync(m => m.ID == exerciseID);
+
+            if (exerciseEntity == null || exerciseEntity.WTUserID != userId)
+            {
+                return false;
+            }
+
+            _context.ExerciseAttribute.RemoveRange(_context.ExerciseAttribute.Where(item => item.ExerciseID == exerciseID));
+            _context.ExerciseRoutineEntry.RemoveRange(_context.ExerciseRoutineEntry.Where(item => item.ExerciseID == exerciseID));
+            _context.ExerciseSessionEntry.RemoveRange(_context.ExerciseSessionEntry.Where(item => item.ExerciseID == exerciseID));
+            _context.Remove(exerciseEntity);
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> DeleteAttribite(int? userId, int? exerciseID, int? attributeId)
+        {
+            var exerciseEntity = await _context.Exercises
+                                               .Include(ex => ex.Attributes)
+                                               .SingleOrDefaultAsync(m => m.ID == exerciseID);
+
+            if (exerciseEntity == null || exerciseEntity.WTUserID != userId)
+            {
+                return false;
+            }
+
+            var attrEntity = exerciseEntity.Attributes.FirstOrDefault(attr => attr.ID == attributeId);
+            if (attrEntity != null)
+            {
+                _context.Remove(attrEntity);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
         #endregion
 
 
+        #region Routines
 
         public async Task<IEnumerable<WorkoutRoutine>> GetRoutinesFromUser(int? userId)
         {
@@ -273,7 +320,7 @@ namespace WT_WebAPI.Repository
             routine.WTUserID = userId;
             routine.ExerciseRoutineEntries.ToList().ForEach(item => item.WorkoutRoutineID = routine.ID);
             routine.RoutineProgramEntries.ToList().ForEach(item => item.WorkoutRoutineID = routine.ID);
-            
+
 
             //check if the posted programIDs or routineIDs belong to the user
             var allUserProgramsIds = await _context.WorkoutPrograms
@@ -291,7 +338,7 @@ namespace WT_WebAPI.Repository
             var programsCheck = routine.RoutineProgramEntries.All(item => allUserProgramsIds.Contains((int)item.WorkoutProgramID));
             var exerciseCheck = routine.ExerciseRoutineEntries.All(item => allUserExercisesIDs.Contains((int)item.ExerciseID));
 
-            if(!programsCheck || !exerciseCheck)
+            if (!programsCheck || !exerciseCheck)
             {
                 return false;
             }
@@ -303,5 +350,152 @@ namespace WT_WebAPI.Repository
 
             return true;
         }
+
+        public async Task<bool> UpdateRoutine(WorkoutRoutine routine)
+        {
+            var routineEntity = await _context.WorkoutRoutines
+                                    .Include(w => w.ExerciseRoutineEntries)
+                                    .Include(w => w.RoutineProgramEntries)
+                                    .SingleOrDefaultAsync(w => w.ID == routine.ID);
+
+            if (routineEntity == null || routineEntity.WTUserID != routine.WTUserID)
+                return false;
+
+            routine.ExerciseRoutineEntries.ToList().ForEach(item => item.WorkoutRoutineID = routineEntity.ID);
+            var updateExercisesResult = await UpdateExercisesForRoutine(routineEntity, routine.ExerciseRoutineEntries.ToList());
+            if (updateExercisesResult == false)
+                return false;
+
+            routine.RoutineProgramEntries.ToList().ForEach(item => item.WorkoutRoutineID = routineEntity.ID);
+            var updateProgramsResult = await UpdateProgramsForRoutine(routineEntity, routine.RoutineProgramEntries.ToList());
+            if (updateProgramsResult == false)
+                return false;
+
+            routineEntity.Name = routine.Name;
+            routineEntity.PlannedDate = routine.PlannedDate;
+            routineEntity.Description = routine.Description;
+
+            await _context.SaveChangesAsync();
+
+            return true;
+
+        }
+
+        public async Task<bool> UpdateExercisesForRoutine(int? userId, int? routineId, List<ExerciseRoutineEntry> routineExercises)
+        {
+            var routineEntity = await _context.WorkoutRoutines
+                        .Include(w => w.ExerciseRoutineEntries)
+                        .SingleOrDefaultAsync(w => w.ID == routineId);
+
+            if (routineEntity == null || routineEntity.WTUserID != userId)
+            {
+                return false;
+            }
+
+            return await UpdateExercisesForRoutine(routineEntity, routineExercises);
+        }
+
+        public async Task<bool> UpdateExercisesForRoutine(WorkoutRoutine routineEntity, List<ExerciseRoutineEntry> routineExercises)
+        {
+            if (routineEntity == null)
+                return false;
+
+            //remove exercises that arent present
+            var exercisesToBeRemoved = routineEntity.ExerciseRoutineEntries.Where(item => !routineExercises.Any(re => re.ExerciseID == item.ExerciseID)).ToList();
+            _context.RemoveRange(exercisesToBeRemoved);
+
+            //add new exercises
+            var toBeAdded = routineExercises.Where(item => !routineEntity.ExerciseRoutineEntries.Any(ex => ex.ExerciseID == item.ExerciseID)).ToList();
+
+
+            var allUserExercisesIDs = await _context.Exercises
+                                        .AsNoTracking()
+                                        .Where(item => item.WTUserID == routineEntity.WTUserID)
+                                        .Select(item => item.ID)
+                                        .ToListAsync();
+
+            //check if all exercises to be added belong to this user
+            var exercisesCheck = toBeAdded.All(item => allUserExercisesIDs.Contains((int)item.ExerciseID));
+            if (exercisesCheck == false)
+                return false;
+
+            toBeAdded.ForEach(item => routineEntity.ExerciseRoutineEntries.Add(item));
+
+            await _context.SaveChangesAsync();
+
+            return true;
+
+        }
+
+        public async Task<bool> UpdateProgramsForRoutine(int? userId, int? routineId, List<RoutineProgramEntry> routinePrograms)
+        {
+
+            var routineEntity = await _context.WorkoutRoutines
+                                    .Include(w => w.RoutineProgramEntries)
+                                    .SingleOrDefaultAsync(w => w.ID == routineId);
+
+            if (routineEntity == null || routineEntity.WTUserID != userId)
+            {
+                return false;
+            }
+
+            return await UpdateProgramsForRoutine(routineEntity, routinePrograms);
+
+        }
+
+        public async Task<bool> UpdateProgramsForRoutine(WorkoutRoutine routineEntity, List<RoutineProgramEntry> routinePrograms)
+        {
+            if (routineEntity == null)
+                return false;
+
+            //remove programs that arent present
+            var programsToBeRemoved = routineEntity.RoutineProgramEntries.Where(item => !routinePrograms.Any(rp => rp.WorkoutProgramID == item.WorkoutProgramID)).ToList();
+            _context.RemoveRange(programsToBeRemoved);
+
+            //add new programs
+            var toBeAdded = routinePrograms.Where(item => !routineEntity.RoutineProgramEntries.Any(rp => rp.WorkoutProgramID == item.WorkoutProgramID)).ToList();
+
+
+            var allUserProgramsIds = await _context.WorkoutPrograms
+                                       .AsNoTracking()
+                                       .Where(item => item.WTUserID == routineEntity.WTUserID)
+                                       .Select(item => item.ID)
+                                       .ToListAsync();
+
+            //check if all programs to be added belong to this user
+            var programsCheck = toBeAdded.All(item => allUserProgramsIds.Contains((int)item.WorkoutProgramID));
+            if (programsCheck == false)
+                return false;
+
+            toBeAdded.ForEach(item => routineEntity.RoutineProgramEntries.Add(item));
+
+            await _context.SaveChangesAsync();
+
+            return true;
+
+        }
+
+        public async Task<bool> DeleteRoutine(int? userId, int? routineID)
+        {
+            var routineEntity = await _context.WorkoutRoutines
+                                   .SingleOrDefaultAsync(m => m.ID == routineID);
+
+            if (routineEntity == null || routineEntity.WTUserID != userId)
+            {
+                return false;
+            }
+
+            _context.ExerciseRoutineEntry.RemoveRange(_context.ExerciseRoutineEntry.Where(item => item.WorkoutRoutineID == routineID));
+            _context.RoutineProgramEntry.RemoveRange(_context.RoutineProgramEntry.Where(item => item.WorkoutRoutineID == routineID));
+            _context.Remove(routineEntity);
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+
+
+        #endregion
     }
 }
