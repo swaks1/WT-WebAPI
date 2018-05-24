@@ -12,11 +12,11 @@ namespace WT_WebAPI.Controllers
 {
     [Produces("application/json")]
     [Route("api/Exercises")]
-    public class ExerciseController : Controller
+    public class ExercisesController : Controller
     {
         private readonly ICommonRepository _repository;
 
-        public ExerciseController(ICommonRepository repository)
+        public ExercisesController(ICommonRepository repository)
         {
             _repository = repository;
         }
@@ -58,7 +58,7 @@ namespace WT_WebAPI.Controllers
                 return new UnprocessableEntityObjectResult(ModelState);
             }
 
-            var exercise = await _repository.GetExercise(exerciseId);
+            var exercise = await _repository.GetExercise(userId,exerciseId);
 
             if (exercise == null)
             {

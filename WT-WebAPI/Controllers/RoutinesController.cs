@@ -60,7 +60,7 @@ namespace WT_WebAPI.Controllers
                 return new UnprocessableEntityObjectResult(ModelState);
             }
 
-            var routine = await _repository.GetRoutine(routineId);
+            var routine = await _repository.GetRoutine(userId, routineId);
 
             if (routine == null)
             {

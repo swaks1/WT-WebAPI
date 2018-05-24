@@ -9,6 +9,8 @@ namespace WT_WebAPI.Entities.WorkoutAssets
     {
         public int ID { get; set; }
 
+        public string PlannedDates { get; set; }
+
         public int? WorkoutRoutineID { get; set; }
         public WorkoutRoutine WorkoutRoutine { get; set; }
 

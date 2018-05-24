@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace WT_WebAPI.Entities.Migrations
 {
-    public partial class initial : Migration
+    public partial class InitialCreate : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -15,6 +15,7 @@ namespace WT_WebAPI.Entities.Migrations
                 {
                     ID = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                    Active = table.Column<bool>(nullable: false),
                     Email = table.Column<string>(nullable: true),
                     FirstName = table.Column<string>(nullable: true),
                     LastName = table.Column<string>(nullable: true),
@@ -45,6 +46,33 @@ namespace WT_WebAPI.Entities.Migrations
                     table.PrimaryKey("PK_BodyStatistics", x => x.ID);
                     table.ForeignKey(
                         name: "FK_BodyStatistics_Users_WTUserID",
+                        column: x => x.WTUserID,
+                        principalTable: "Users",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ConcreteExercises",
+                columns: table => new
+                {
+                    ID = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                    Category = table.Column<int>(nullable: false),
+                    Description = table.Column<string>(nullable: true),
+                    ImagePath = table.Column<string>(nullable: true),
+                    Name = table.Column<string>(nullable: true),
+                    ProgramId = table.Column<int>(nullable: true),
+                    ProgramName = table.Column<string>(nullable: true),
+                    SessionId = table.Column<int>(nullable: true),
+                    SesssionName = table.Column<string>(nullable: true),
+                    WTUserID = table.Column<int>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ConcreteExercises", x => x.ID);
+                    table.ForeignKey(
+                        name: "FK_ConcreteExercises_Users_WTUserID",
                         column: x => x.WTUserID,
                         principalTable: "Users",
                         principalColumn: "ID",
@@ -109,7 +137,7 @@ namespace WT_WebAPI.Entities.Migrations
                     Description = table.Column<string>(nullable: true),
                     ImagePath = table.Column<string>(nullable: true),
                     Name = table.Column<string>(nullable: true),
-                    PlannedDate = table.Column<DateTime>(nullable: true),
+                    PlannedDates = table.Column<string>(nullable: true),
                     WTUserID = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
@@ -187,6 +215,28 @@ namespace WT_WebAPI.Entities.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ConcreteExerciseAttribute",
+                columns: table => new
+                {
+                    ID = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                    AttributeName = table.Column<string>(nullable: true),
+                    AttributeValue = table.Column<string>(nullable: true),
+                    ConcreteExerciseID = table.Column<int>(nullable: true),
+                    IsDeletable = table.Column<bool>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ConcreteExerciseAttribute", x => x.ID);
+                    table.ForeignKey(
+                        name: "FK_ConcreteExerciseAttribute_ConcreteExercises_ConcreteExerciseID",
+                        column: x => x.ConcreteExerciseID,
+                        principalTable: "ConcreteExercises",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ExerciseAttribute",
                 columns: table => new
                 {
@@ -241,6 +291,7 @@ namespace WT_WebAPI.Entities.Migrations
                 {
                     ID = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                    PlannedDates = table.Column<string>(nullable: true),
                     WorkoutProgramID = table.Column<int>(nullable: true),
                     WorkoutRoutineID = table.Column<int>(nullable: true)
                 },
@@ -262,25 +313,25 @@ namespace WT_WebAPI.Entities.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ExerciseSessionEntry",
+                name: "ConcreteExerciseSessionEntry",
                 columns: table => new
                 {
                     ID = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    ExerciseID = table.Column<int>(nullable: true),
+                    ConcreteExerciseID = table.Column<int>(nullable: true),
                     WorkoutSessionID = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ExerciseSessionEntry", x => x.ID);
+                    table.PrimaryKey("PK_ConcreteExerciseSessionEntry", x => x.ID);
                     table.ForeignKey(
-                        name: "FK_ExerciseSessionEntry_Exercises_ExerciseID",
-                        column: x => x.ExerciseID,
-                        principalTable: "Exercises",
+                        name: "FK_ConcreteExerciseSessionEntry_ConcreteExercises_ConcreteExerciseID",
+                        column: x => x.ConcreteExerciseID,
+                        principalTable: "ConcreteExercises",
                         principalColumn: "ID",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_ExerciseSessionEntry_WorkoutSessions_WorkoutSessionID",
+                        name: "FK_ConcreteExerciseSessionEntry_WorkoutSessions_WorkoutSessionID",
                         column: x => x.WorkoutSessionID,
                         principalTable: "WorkoutSessions",
                         principalColumn: "ID",
@@ -296,6 +347,26 @@ namespace WT_WebAPI.Entities.Migrations
                 name: "IX_BodyStatistics_WTUserID",
                 table: "BodyStatistics",
                 column: "WTUserID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConcreteExerciseAttribute_ConcreteExerciseID",
+                table: "ConcreteExerciseAttribute",
+                column: "ConcreteExerciseID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConcreteExercises_WTUserID",
+                table: "ConcreteExercises",
+                column: "WTUserID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConcreteExerciseSessionEntry_ConcreteExerciseID",
+                table: "ConcreteExerciseSessionEntry",
+                column: "ConcreteExerciseID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConcreteExerciseSessionEntry_WorkoutSessionID",
+                table: "ConcreteExerciseSessionEntry",
+                column: "WorkoutSessionID");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ExerciseAttribute_ExerciseID",
@@ -316,16 +387,6 @@ namespace WT_WebAPI.Entities.Migrations
                 name: "IX_Exercises_WTUserID",
                 table: "Exercises",
                 column: "WTUserID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ExerciseSessionEntry_ExerciseID",
-                table: "ExerciseSessionEntry",
-                column: "ExerciseID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ExerciseSessionEntry_WorkoutSessionID",
-                table: "ExerciseSessionEntry",
-                column: "WorkoutSessionID");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProgressImage_BodyStatisticID",
@@ -364,13 +425,16 @@ namespace WT_WebAPI.Entities.Migrations
                 name: "BodyStatAttribute");
 
             migrationBuilder.DropTable(
+                name: "ConcreteExerciseAttribute");
+
+            migrationBuilder.DropTable(
+                name: "ConcreteExerciseSessionEntry");
+
+            migrationBuilder.DropTable(
                 name: "ExerciseAttribute");
 
             migrationBuilder.DropTable(
                 name: "ExerciseRoutineEntry");
-
-            migrationBuilder.DropTable(
-                name: "ExerciseSessionEntry");
 
             migrationBuilder.DropTable(
                 name: "ProgressImage");
@@ -379,10 +443,13 @@ namespace WT_WebAPI.Entities.Migrations
                 name: "RoutineProgramEntry");
 
             migrationBuilder.DropTable(
-                name: "Exercises");
+                name: "ConcreteExercises");
 
             migrationBuilder.DropTable(
                 name: "WorkoutSessions");
+
+            migrationBuilder.DropTable(
+                name: "Exercises");
 
             migrationBuilder.DropTable(
                 name: "BodyStatistics");

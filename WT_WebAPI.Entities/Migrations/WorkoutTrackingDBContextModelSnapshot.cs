@@ -158,6 +158,8 @@ namespace WT_WebAPI.Entities.Migrations
                     b.Property<int>("ID")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<string>("PlannedDates");
+
                     b.Property<int?>("WorkoutProgramID");
 
                     b.Property<int?>("WorkoutRoutineID");
@@ -208,7 +210,7 @@ namespace WT_WebAPI.Entities.Migrations
 
                     b.Property<string>("Name");
 
-                    b.Property<DateTime?>("PlannedDate");
+                    b.Property<string>("PlannedDates");
 
                     b.Property<int?>("WTUserID");
 

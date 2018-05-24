@@ -12,8 +12,8 @@ using WT_WebAPI.Entities.WorkoutAssets;
 namespace WT_WebAPI.Entities.Migrations
 {
     [DbContext(typeof(WorkoutTrackingDBContext))]
-    [Migration("20180516172525_initial")]
-    partial class initial
+    [Migration("20180524154051_InitialCreate")]
+    partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -21,6 +21,74 @@ namespace WT_WebAPI.Entities.Migrations
             modelBuilder
                 .HasAnnotation("ProductVersion", "2.0.3-rtm-10026")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+            modelBuilder.Entity("WT_WebAPI.Entities.WorkoutAssets.ConcreteExercise", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<int>("Category");
+
+                    b.Property<string>("Description");
+
+                    b.Property<string>("ImagePath");
+
+                    b.Property<string>("Name");
+
+                    b.Property<int?>("ProgramId");
+
+                    b.Property<string>("ProgramName");
+
+                    b.Property<int?>("SessionId");
+
+                    b.Property<string>("SesssionName");
+
+                    b.Property<int?>("WTUserID");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("WTUserID");
+
+                    b.ToTable("ConcreteExercises");
+                });
+
+            modelBuilder.Entity("WT_WebAPI.Entities.WorkoutAssets.ConcreteExerciseAttribute", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("AttributeName");
+
+                    b.Property<string>("AttributeValue");
+
+                    b.Property<int?>("ConcreteExerciseID");
+
+                    b.Property<bool>("IsDeletable");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("ConcreteExerciseID");
+
+                    b.ToTable("ConcreteExerciseAttribute");
+                });
+
+            modelBuilder.Entity("WT_WebAPI.Entities.WorkoutAssets.ConcreteExerciseSessionEntry", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<int?>("ConcreteExerciseID");
+
+                    b.Property<int?>("WorkoutSessionID");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("ConcreteExerciseID");
+
+                    b.HasIndex("WorkoutSessionID");
+
+                    b.ToTable("ConcreteExerciseSessionEntry");
+                });
 
             modelBuilder.Entity("WT_WebAPI.Entities.WorkoutAssets.Exercise", b =>
                 {
@@ -86,28 +154,12 @@ namespace WT_WebAPI.Entities.Migrations
                     b.ToTable("ExerciseRoutineEntry");
                 });
 
-            modelBuilder.Entity("WT_WebAPI.Entities.WorkoutAssets.ExerciseSessionEntry", b =>
-                {
-                    b.Property<int>("ID")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<int?>("ExerciseID");
-
-                    b.Property<int?>("WorkoutSessionID");
-
-                    b.HasKey("ID");
-
-                    b.HasIndex("ExerciseID");
-
-                    b.HasIndex("WorkoutSessionID");
-
-                    b.ToTable("ExerciseSessionEntry");
-                });
-
             modelBuilder.Entity("WT_WebAPI.Entities.WorkoutAssets.RoutineProgramEntry", b =>
                 {
                     b.Property<int>("ID")
                         .ValueGeneratedOnAdd();
+
+                    b.Property<string>("PlannedDates");
 
                     b.Property<int?>("WorkoutProgramID");
 
@@ -159,7 +211,7 @@ namespace WT_WebAPI.Entities.Migrations
 
                     b.Property<string>("Name");
 
-                    b.Property<DateTime?>("PlannedDate");
+                    b.Property<string>("PlannedDates");
 
                     b.Property<int?>("WTUserID");
 
@@ -251,6 +303,8 @@ namespace WT_WebAPI.Entities.Migrations
                     b.Property<int>("ID")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<bool>("Active");
+
                     b.Property<string>("Email");
 
                     b.Property<string>("FirstName");
@@ -268,6 +322,31 @@ namespace WT_WebAPI.Entities.Migrations
                     b.HasKey("ID");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("WT_WebAPI.Entities.WorkoutAssets.ConcreteExercise", b =>
+                {
+                    b.HasOne("WT_WebAPI.Entities.WTUser", "User")
+                        .WithMany()
+                        .HasForeignKey("WTUserID");
+                });
+
+            modelBuilder.Entity("WT_WebAPI.Entities.WorkoutAssets.ConcreteExerciseAttribute", b =>
+                {
+                    b.HasOne("WT_WebAPI.Entities.WorkoutAssets.ConcreteExercise", "ConcreteExercise")
+                        .WithMany("Attributes")
+                        .HasForeignKey("ConcreteExerciseID");
+                });
+
+            modelBuilder.Entity("WT_WebAPI.Entities.WorkoutAssets.ConcreteExerciseSessionEntry", b =>
+                {
+                    b.HasOne("WT_WebAPI.Entities.WorkoutAssets.ConcreteExercise", "ConcreteExercise")
+                        .WithMany()
+                        .HasForeignKey("ConcreteExerciseID");
+
+                    b.HasOne("WT_WebAPI.Entities.WorkoutAssets.WorkoutSession", "WorkoutSession")
+                        .WithMany("ConcreteExerciseEntries")
+                        .HasForeignKey("WorkoutSessionID");
                 });
 
             modelBuilder.Entity("WT_WebAPI.Entities.WorkoutAssets.Exercise", b =>
@@ -293,17 +372,6 @@ namespace WT_WebAPI.Entities.Migrations
                     b.HasOne("WT_WebAPI.Entities.WorkoutAssets.WorkoutRoutine", "WorkoutRoutine")
                         .WithMany("ExerciseRoutineEntries")
                         .HasForeignKey("WorkoutRoutineID");
-                });
-
-            modelBuilder.Entity("WT_WebAPI.Entities.WorkoutAssets.ExerciseSessionEntry", b =>
-                {
-                    b.HasOne("WT_WebAPI.Entities.WorkoutAssets.Exercise", "Exercise")
-                        .WithMany()
-                        .HasForeignKey("ExerciseID");
-
-                    b.HasOne("WT_WebAPI.Entities.WorkoutAssets.WorkoutSession", "WorkoutSession")
-                        .WithMany("ExerciseSessionEntries")
-                        .HasForeignKey("WorkoutSessionID");
                 });
 
             modelBuilder.Entity("WT_WebAPI.Entities.WorkoutAssets.RoutineProgramEntry", b =>
@@ -334,7 +402,7 @@ namespace WT_WebAPI.Entities.Migrations
             modelBuilder.Entity("WT_WebAPI.Entities.WorkoutAssets.WorkoutSession", b =>
                 {
                     b.HasOne("WT_WebAPI.Entities.WTUser", "User")
-                        .WithMany()
+                        .WithMany("WorkoutSession")
                         .HasForeignKey("WTUserID");
                 });
 
@@ -348,7 +416,7 @@ namespace WT_WebAPI.Entities.Migrations
             modelBuilder.Entity("WT_WebAPI.Entities.WorkoutProgress.BodyStatistic", b =>
                 {
                     b.HasOne("WT_WebAPI.Entities.WTUser", "User")
-                        .WithMany()
+                        .WithMany("BodyStatistics")
                         .HasForeignKey("WTUserID");
                 });
 
