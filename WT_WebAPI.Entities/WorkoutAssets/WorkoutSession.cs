@@ -13,6 +13,7 @@ namespace WT_WebAPI.Entities.WorkoutAssets
         public int? WTUserID { get; set; }
         public WTUser User { get; set; }
 
-        public ICollection<ExerciseSessionEntry> ExerciseSessionEntries { get; set; }
+        public ICollection<ConcreteExerciseSessionEntry> ConcreteExerciseEntries { get; set; }
+       
     }
 }

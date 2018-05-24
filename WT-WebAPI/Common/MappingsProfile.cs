@@ -41,10 +41,10 @@ namespace WT_WebAPI.Common
 
 
             CreateMap<WorkoutSession, WorkoutSessionDTO>().ForMember(dest => dest.Exercises,
-                                               opts => opts.MapFrom(src => src.ExerciseSessionEntries.Select(ex => ex.Exercise)));
+                                               opts => opts.MapFrom(src => src.ConcreteExerciseEntries.Select(ex => ex.ConcreteExercise)));
 
-            CreateMap<WorkoutSessionDTO, WorkoutSession>().ForMember(dest => dest.ExerciseSessionEntries,
-                                               opts => opts.MapFrom(src => src.Exercises.Select(ex => new ExerciseSessionEntry { ExerciseID = ex.ID })));
+            CreateMap<WorkoutSessionDTO, WorkoutSession>().ForMember(dest => dest.ConcreteExerciseEntries,
+                                               opts => opts.MapFrom(src => src.Exercises.Select(ex => new ConcreteExerciseSessionEntry { ConcreteExerciseID = ex.ID })));
 
 
             CreateMap<Exercise, ExerciseDTO>();//.ForMember(dest => dest.User, opt => opt.Ignore());

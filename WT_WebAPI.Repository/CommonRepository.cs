@@ -49,7 +49,7 @@ namespace WT_WebAPI.Repository
                                 .Include(w => w.WorkoutPrograms)
                                     .ThenInclude(e => e.RoutineProgramEntries)
                                 .Include(w => w.WorkoutSession)
-                                    .ThenInclude(s => s.ExerciseSessionEntries)
+                                    .ThenInclude(e => e.ConcreteExerciseEntries)
                                 .Include(w => w.BodyStatistics)
                                     .ThenInclude(s => s.BodyStatAttributes)
                                 .Include(w => w.BodyStatistics)
@@ -252,7 +252,6 @@ namespace WT_WebAPI.Repository
 
             _context.ExerciseAttribute.RemoveRange(_context.ExerciseAttribute.Where(item => item.ExerciseID == exerciseID));
             _context.ExerciseRoutineEntry.RemoveRange(_context.ExerciseRoutineEntry.Where(item => item.ExerciseID == exerciseID));
-            _context.ExerciseSessionEntry.RemoveRange(_context.ExerciseSessionEntry.Where(item => item.ExerciseID == exerciseID));
             _context.Remove(exerciseEntity);
 
             await _context.SaveChangesAsync();

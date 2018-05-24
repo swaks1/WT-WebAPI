@@ -222,32 +222,36 @@ namespace WT_WebAPI.Entities.DBContext
 
 
 
+            var ConcreteExercisesList = exercises.ToList().Select(item => item.GetConcreteExerciseObject());
+            context.ConcreteExercises.AddRange(ConcreteExercisesList);
+            context.SaveChanges();
 
-            var exerciseSessionEntry1 = new ExerciseSessionEntry { ExerciseID = 1, WorkoutSessionID = 1 };
-            var exerciseSessionEntry2 = new ExerciseSessionEntry { ExerciseID = 2, WorkoutSessionID = 1 };
-            var exerciseSessionEntry3 = new ExerciseSessionEntry { ExerciseID = 1, WorkoutSessionID = 2 };
+
+            var exerciseSessionEntry1 = new ConcreteExerciseSessionEntry { ConcreteExerciseID = 1, WorkoutSessionID = 1 };
+            var exerciseSessionEntry2 = new ConcreteExerciseSessionEntry { ConcreteExerciseID = 2, WorkoutSessionID = 1 };
+            var exerciseSessionEntry3 = new ConcreteExerciseSessionEntry { ConcreteExerciseID = 1, WorkoutSessionID = 2 };
 
             var session = context.WorkoutSessions.SingleOrDefault(u => u.ID == 1);
-            session.ExerciseSessionEntries = new List<ExerciseSessionEntry>();
-            session.ExerciseSessionEntries.Add(exerciseSessionEntry1);
-            session.ExerciseSessionEntries.Add(exerciseSessionEntry2);
+            session.ConcreteExerciseEntries = new List<ConcreteExerciseSessionEntry>();
+            session.ConcreteExerciseEntries.Add(exerciseSessionEntry1);
+            session.ConcreteExerciseEntries.Add(exerciseSessionEntry2);
 
             session = context.WorkoutSessions.SingleOrDefault(u => u.ID == 2);
-            session.ExerciseSessionEntries = new List<ExerciseSessionEntry>();
-            session.ExerciseSessionEntries.Add(exerciseSessionEntry3);
+            session.ConcreteExerciseEntries = new List<ConcreteExerciseSessionEntry>();
+            session.ConcreteExerciseEntries.Add(exerciseSessionEntry3);
 
-            var exerciseSessionEntry4 = new ExerciseSessionEntry { ExerciseID = 3, WorkoutSessionID = 3 };
-            var exerciseSessionEntry5 = new ExerciseSessionEntry { ExerciseID = 4, WorkoutSessionID = 3 };
-            var exerciseSessionEntry6 = new ExerciseSessionEntry { ExerciseID = 3, WorkoutSessionID = 4 };
+            var exerciseSessionEntry4 = new ConcreteExerciseSessionEntry { ConcreteExerciseID = 3, WorkoutSessionID = 3 };
+            var exerciseSessionEntry5 = new ConcreteExerciseSessionEntry { ConcreteExerciseID = 4, WorkoutSessionID = 3 };
+            var exerciseSessionEntry6 = new ConcreteExerciseSessionEntry { ConcreteExerciseID = 3, WorkoutSessionID = 4 };
 
             session = context.WorkoutSessions.SingleOrDefault(u => u.ID == 3);
-            session.ExerciseSessionEntries = new List<ExerciseSessionEntry>();
-            session.ExerciseSessionEntries.Add(exerciseSessionEntry4);
-            session.ExerciseSessionEntries.Add(exerciseSessionEntry5);
+            session.ConcreteExerciseEntries = new List<ConcreteExerciseSessionEntry>();
+            session.ConcreteExerciseEntries.Add(exerciseSessionEntry4);
+            session.ConcreteExerciseEntries.Add(exerciseSessionEntry5);
 
             session = context.WorkoutSessions.SingleOrDefault(u => u.ID == 4);
-            session.ExerciseSessionEntries = new List<ExerciseSessionEntry>();
-            session.ExerciseSessionEntries.Add(exerciseSessionEntry6);
+            session.ConcreteExerciseEntries = new List<ConcreteExerciseSessionEntry>();
+            session.ConcreteExerciseEntries.Add(exerciseSessionEntry6);
             context.SaveChanges();
 
 
