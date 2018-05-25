@@ -138,7 +138,7 @@ namespace WT_WebAPI.Entities.DBContext
 
 
 
-            var progressImage1 = new ProgressImage { DateCreated = DateTime.Now, Url="url1", BodyStatisticID = 1 };
+            var progressImage1 = new ProgressImage { DateCreated = DateTime.Now, Url = "url1", BodyStatisticID = 1 };
             var progressImage2 = new ProgressImage { DateCreated = DateTime.Now.AddDays(1), Url = "url2", BodyStatisticID = 2 };
             var progressImage3 = new ProgressImage { DateCreated = DateTime.Now.AddDays(2), Url = "url3", BodyStatisticID = 3 };
             var progressImage4 = new ProgressImage { DateCreated = DateTime.Now.AddDays(3), Url = "url4", BodyStatisticID = 4 };
@@ -222,41 +222,14 @@ namespace WT_WebAPI.Entities.DBContext
 
 
 
-            var ConcreteExercisesList = exercises.ToList().Select(item => item.GetConcreteExerciseObject());
-            context.ConcreteExercises.AddRange(ConcreteExercisesList);
+            var ConcreteExercisesList = exercises.ToList().Select(item => item.GetConcreteExerciseObject()).ToList();
+            for (int i = 0; i < ConcreteExercisesList.Count(); i++)
+            {
+                var item = ConcreteExercisesList[i];
+                item.WorkoutSessionID = i + 1;
+                context.ConcreteExercises.Add(item);
+            }
             context.SaveChanges();
-
-
-            var exerciseSessionEntry1 = new ConcreteExerciseSessionEntry { ConcreteExerciseID = 1, WorkoutSessionID = 1 };
-            var exerciseSessionEntry2 = new ConcreteExerciseSessionEntry { ConcreteExerciseID = 2, WorkoutSessionID = 1 };
-            var exerciseSessionEntry3 = new ConcreteExerciseSessionEntry { ConcreteExerciseID = 1, WorkoutSessionID = 2 };
-
-            var session = context.WorkoutSessions.SingleOrDefault(u => u.ID == 1);
-            session.ConcreteExerciseEntries = new List<ConcreteExerciseSessionEntry>();
-            session.ConcreteExerciseEntries.Add(exerciseSessionEntry1);
-            session.ConcreteExerciseEntries.Add(exerciseSessionEntry2);
-
-            session = context.WorkoutSessions.SingleOrDefault(u => u.ID == 2);
-            session.ConcreteExerciseEntries = new List<ConcreteExerciseSessionEntry>();
-            session.ConcreteExerciseEntries.Add(exerciseSessionEntry3);
-
-            var exerciseSessionEntry4 = new ConcreteExerciseSessionEntry { ConcreteExerciseID = 3, WorkoutSessionID = 3 };
-            var exerciseSessionEntry5 = new ConcreteExerciseSessionEntry { ConcreteExerciseID = 4, WorkoutSessionID = 3 };
-            var exerciseSessionEntry6 = new ConcreteExerciseSessionEntry { ConcreteExerciseID = 3, WorkoutSessionID = 4 };
-
-            session = context.WorkoutSessions.SingleOrDefault(u => u.ID == 3);
-            session.ConcreteExerciseEntries = new List<ConcreteExerciseSessionEntry>();
-            session.ConcreteExerciseEntries.Add(exerciseSessionEntry4);
-            session.ConcreteExerciseEntries.Add(exerciseSessionEntry5);
-
-            session = context.WorkoutSessions.SingleOrDefault(u => u.ID == 4);
-            session.ConcreteExerciseEntries = new List<ConcreteExerciseSessionEntry>();
-            session.ConcreteExerciseEntries.Add(exerciseSessionEntry6);
-            context.SaveChanges();
-
-
-
-
 
         }
     }

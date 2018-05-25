@@ -24,7 +24,7 @@ namespace WT_WebAPI.Entities.DBContext
         public DbSet<ExerciseAttribute> ExerciseAttribute { get; set; }
         public DbSet<ExerciseRoutineEntry> ExerciseRoutineEntry { get; set; }
         public DbSet<RoutineProgramEntry> RoutineProgramEntry { get; set; }
-        public DbSet<ConcreteExerciseSessionEntry> ConcreteExerciseSessionEntry { get; set; }
+        public DbSet<ConcreteExerciseAttribute> ConcreteExerciseAttribute { get; set; }
 
 
     }

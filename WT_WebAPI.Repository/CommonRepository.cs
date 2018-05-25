@@ -5,9 +5,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using WT_WebAPI.Entities;
 using WT_WebAPI.Entities.DBContext;
-using WT_WebAPI.Entities.DTO.WorkoutAssets;
 using WT_WebAPI.Entities.WorkoutAssets;
 using WT_WebAPI.Repository.Interfaces;
+using WT_WebAPI.Entities.Extensions;
 
 namespace WT_WebAPI.Repository
 {
@@ -49,7 +49,8 @@ namespace WT_WebAPI.Repository
                                 .Include(w => w.WorkoutPrograms)
                                     .ThenInclude(e => e.RoutineProgramEntries)
                                 .Include(w => w.WorkoutSession)
-                                    .ThenInclude(e => e.ConcreteExerciseEntries)
+                                    .ThenInclude(e => e.ConcreteExercises)
+                                        .ThenInclude(e => e.Attributes)
                                 .Include(w => w.BodyStatistics)
                                     .ThenInclude(s => s.BodyStatAttributes)
                                 .Include(w => w.BodyStatistics)
@@ -244,7 +245,7 @@ namespace WT_WebAPI.Repository
         public async Task<bool> DeleteExercise(int? userId, int? exerciseID)
         {
             var exerciseEntity = await _context.Exercises
-                                               .SingleOrDefaultAsync(m => m.ID == exerciseID);
+                                               .SingleOrDefaultAsync(m => m.WTUserID == userId && m.ID == exerciseID);
 
             if (exerciseEntity == null || exerciseEntity.WTUserID != userId)
             {
@@ -650,6 +651,192 @@ namespace WT_WebAPI.Repository
             return true;
         }
 
+
+        #endregion
+
+        #region WorkoutSessions
+
+        public async Task<IEnumerable<WorkoutSession>> GetSessionsForUser(int? userId, DateTime? startDate, DateTime? endDate)
+        {
+
+            var allSessions = _context.WorkoutSessions
+                                        .AsNoTracking()
+                                        .Include(w => w.ConcreteExercises)
+                                            .ThenInclude(c => c.Attributes)
+                                        .Where(w => w.WTUserID == userId && w.Date != null);
+            if (startDate != null)
+            {
+                allSessions = allSessions.Where(session => session.Date.Value.Date >= startDate.Value.Date);
+            }
+
+            if (endDate != null)
+            {
+                allSessions = allSessions.Where(session => session.Date.Value.Date <= endDate.Value.Date);
+            }
+
+            return await allSessions.ToListAsync();
+        }
+
+        public async Task<WorkoutSession> GetSession(int? userId, int? sessionId)
+        {
+            return await _context.WorkoutSessions
+                                .Include(w => w.ConcreteExercises)
+                                        .ThenInclude(c => c.Attributes)
+                                .SingleOrDefaultAsync(w => w.ID == sessionId && w.WTUserID == userId);
+        }
+
+        public async Task<WorkoutSession> GetSessionForDay(int? userId, DateTime date)
+        {
+            var session = await _context.WorkoutSessions
+                                        .Include(w => w.ConcreteExercises)
+                                                .ThenInclude(c => c.Attributes)
+                                        .SingleOrDefaultAsync(w => w.WTUserID == userId && w.Date.Value.Date == date.Date);
+
+            if (session == null)
+            {
+                session = new WorkoutSession
+                {
+                    Date = date,
+                    WTUserID = userId
+                };
+                _context.WorkoutSessions.Add(session);
+                await _context.SaveChangesAsync();
+            }
+
+            return session;
+        }
+
+        public async Task<WorkoutSession> AddOrUpdateSession(int? userId, DateTime date, List<WorkoutRoutine> routines, List<Exercise> exercises, List<ConcreteExercise> concreteExercises)
+        {
+            var session = await GetSessionForDay(userId, date);
+
+            if (routines == null)
+                routines = new List<WorkoutRoutine>();
+            if (exercises == null)
+                exercises = new List<Exercise>();
+            if (concreteExercises == null)
+                concreteExercises = new List<ConcreteExercise>();
+
+            //get Routines form db and convert them to ConcreteExercises 
+            var routinesIds = routines.Select(item => item.ID);
+            var routinesEntityList = await _context.WorkoutRoutines
+                                                    .AsNoTracking()
+                                                    .Include(rout => rout.ExerciseRoutineEntries)
+                                                        .ThenInclude(rout => rout.Exercise)
+                                                            .ThenInclude(ex => ex.Attributes)
+                                                    .Where(rout => rout.WTUserID == userId && routinesIds.Contains(rout.ID))
+                                                    .ToListAsync();
+
+            var concreteExercisesFromRoutine = new List<ConcreteExercise>();
+            foreach (var routine in routinesEntityList)
+            {
+                var rotuineEntries = routine.ExerciseRoutineEntries.ToList();
+                foreach (var er in rotuineEntries)
+                {
+                    var concreteExercise = er.Exercise.GetConcreteExerciseObject();
+                    concreteExercise.RoutineId = routine.ID;
+                    concreteExercise.RoutineName = routine.Name;
+                    concreteExercise.WorkoutSessionID = session.ID;
+                    concreteExercisesFromRoutine.Add(concreteExercise);
+                }
+            }
+
+
+            //convert Exercises to ConcreteExercises 
+            var exerciseIds = exercises.Select(item => item.ID);
+            var exerciseEntityList = await _context.Exercises
+                                                    .AsNoTracking()
+                                                    .Include(rout => rout.Attributes)
+                                                    .Where(rout => rout.WTUserID == userId && exerciseIds.Contains(rout.ID))
+                                                    .ToListAsync();
+
+            var concreteExercisesFromExercises = new List<ConcreteExercise>();
+            foreach (var exercise in exerciseEntityList)
+            {
+                var concreteExercise = exercise.GetConcreteExerciseObject();
+                concreteExercise.WorkoutSessionID = session.ID;
+                concreteExercisesFromExercises.Add(concreteExercise);
+            }
+
+
+
+            //Update existing concreteExercises found in the session
+            foreach (var cExercise in concreteExercises)
+            {
+                var concreteExerciseEntity = session.ConcreteExercises.FirstOrDefault(item => item.ID == cExercise.ID);
+                if (concreteExerciseEntity != null)
+                {
+                    cExercise.Attributes.ToList().ForEach(item => item.ID = 0);
+
+                    concreteExerciseEntity.Name = cExercise.Name;
+                    concreteExerciseEntity.Category = cExercise.Category;
+                    concreteExerciseEntity.Description = cExercise.Description;
+
+                    _context.ConcreteExerciseAttribute.RemoveRange(concreteExerciseEntity.Attributes);
+                    concreteExerciseEntity.Attributes = cExercise.Attributes;
+                }
+            }
+
+
+            //add the new Concrete Exercises which were created before...
+            concreteExercisesFromRoutine.ToList().ForEach(item => session.ConcreteExercises.Add(item));
+            concreteExercisesFromExercises.ToList().ForEach(item => session.ConcreteExercises.Add(item));
+
+
+            await _context.SaveChangesAsync();
+
+            return session;
+        }
+
+        public async Task<bool> UpdateConcreteExercises(int? userId, int? sessionId, List<ConcreteExercise> concreteExercises)
+        {
+            var sessionEntity = await GetSession(userId, sessionId);
+
+            if (sessionEntity == null)
+                return false;
+
+            foreach (var cExercise in concreteExercises)
+            {
+                var concreteExerciseEntity = sessionEntity.ConcreteExercises.FirstOrDefault(item => item.ID == cExercise.ID);
+                if (concreteExerciseEntity != null)
+                {
+                    cExercise.Attributes.ToList().ForEach(item => item.ID = 0);
+
+                    concreteExerciseEntity.Name = cExercise.Name;
+                    concreteExerciseEntity.Category = cExercise.Category;
+                    concreteExerciseEntity.Description = cExercise.Description;
+
+                    _context.ConcreteExerciseAttribute.RemoveRange(concreteExerciseEntity.Attributes);
+                    concreteExerciseEntity.Attributes = cExercise.Attributes;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> DeleteConcreteExercises(int? userId, int? sessionId, List<int> concreteExerciseIds)
+        {
+            var sessionEntity = await GetSession(userId, sessionId);
+
+            if (sessionEntity == null)
+                return false;
+
+            foreach (var id in concreteExerciseIds)
+            {
+                var concreteExerciseEntity = sessionEntity.ConcreteExercises.FirstOrDefault(item => item.ID == id);
+                if (concreteExerciseEntity != null)
+                {
+                    _context.ConcreteExerciseAttribute.RemoveRange(concreteExerciseEntity.Attributes);
+                    _context.Remove(concreteExerciseEntity);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
 
         #endregion
     }

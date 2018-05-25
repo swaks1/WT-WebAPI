@@ -13,8 +13,8 @@ namespace WT_WebAPI.Entities.WorkoutAssets
         public string Description { get; set; }
         public string ImagePath { get; set; }
 
-        public int? SessionId { get; set; }
-        public string SesssionName { get; set; }
+        public int? RoutineId { get; set; }
+        public string RoutineName { get; set; }
 
         public int? ProgramId { get; set; }
         public string ProgramName { get; set; }
@@ -22,6 +22,9 @@ namespace WT_WebAPI.Entities.WorkoutAssets
         //Relationships (Navigational properties)
         public int? WTUserID { get; set; }
         public WTUser User { get; set; }
+
+        public int? WorkoutSessionID { get; set; }
+        public WorkoutSession WorkoutSession { get; set; }
 
         public ICollection<ConcreteExerciseAttribute> Attributes { get; set; }
     }

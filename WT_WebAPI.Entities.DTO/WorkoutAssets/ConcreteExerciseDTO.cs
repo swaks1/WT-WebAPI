@@ -15,14 +15,16 @@ namespace WT_WebAPI.Entities.DTO.WorkoutAssets
         public string Description { get; set; }
         public string ImagePath { get; set; }
 
-        public int? SessionId { get; set; }
-        public string SesssionName { get; set; }
+        public int? RoutineId { get; set; }
+        public string RoutineName { get; set; }
 
         public int? ProgramId { get; set; }
         public string ProgramName { get; set; }
 
         //Relationships (Navigational properties)
         public int? WTUserID { get; set; }
+
+        public int? WorkoutSessionID { get; set; }
 
         public ICollection<ConcreteExerciseAttributeDTO> Attributes { get; set; }
 

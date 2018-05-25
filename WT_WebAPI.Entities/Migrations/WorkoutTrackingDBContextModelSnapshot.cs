@@ -38,15 +38,19 @@ namespace WT_WebAPI.Entities.Migrations
 
                     b.Property<string>("ProgramName");
 
-                    b.Property<int?>("SessionId");
+                    b.Property<int?>("RoutineId");
 
-                    b.Property<string>("SesssionName");
+                    b.Property<string>("RoutineName");
 
                     b.Property<int?>("WTUserID");
+
+                    b.Property<int?>("WorkoutSessionID");
 
                     b.HasKey("ID");
 
                     b.HasIndex("WTUserID");
+
+                    b.HasIndex("WorkoutSessionID");
 
                     b.ToTable("ConcreteExercises");
                 });
@@ -69,24 +73,6 @@ namespace WT_WebAPI.Entities.Migrations
                     b.HasIndex("ConcreteExerciseID");
 
                     b.ToTable("ConcreteExerciseAttribute");
-                });
-
-            modelBuilder.Entity("WT_WebAPI.Entities.WorkoutAssets.ConcreteExerciseSessionEntry", b =>
-                {
-                    b.Property<int>("ID")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<int?>("ConcreteExerciseID");
-
-                    b.Property<int?>("WorkoutSessionID");
-
-                    b.HasKey("ID");
-
-                    b.HasIndex("ConcreteExerciseID");
-
-                    b.HasIndex("WorkoutSessionID");
-
-                    b.ToTable("ConcreteExerciseSessionEntry");
                 });
 
             modelBuilder.Entity("WT_WebAPI.Entities.WorkoutAssets.Exercise", b =>
@@ -328,6 +314,10 @@ namespace WT_WebAPI.Entities.Migrations
                     b.HasOne("WT_WebAPI.Entities.WTUser", "User")
                         .WithMany()
                         .HasForeignKey("WTUserID");
+
+                    b.HasOne("WT_WebAPI.Entities.WorkoutAssets.WorkoutSession", "WorkoutSession")
+                        .WithMany("ConcreteExercises")
+                        .HasForeignKey("WorkoutSessionID");
                 });
 
             modelBuilder.Entity("WT_WebAPI.Entities.WorkoutAssets.ConcreteExerciseAttribute", b =>
@@ -335,17 +325,6 @@ namespace WT_WebAPI.Entities.Migrations
                     b.HasOne("WT_WebAPI.Entities.WorkoutAssets.ConcreteExercise", "ConcreteExercise")
                         .WithMany("Attributes")
                         .HasForeignKey("ConcreteExerciseID");
-                });
-
-            modelBuilder.Entity("WT_WebAPI.Entities.WorkoutAssets.ConcreteExerciseSessionEntry", b =>
-                {
-                    b.HasOne("WT_WebAPI.Entities.WorkoutAssets.ConcreteExercise", "ConcreteExercise")
-                        .WithMany()
-                        .HasForeignKey("ConcreteExerciseID");
-
-                    b.HasOne("WT_WebAPI.Entities.WorkoutAssets.WorkoutSession", "WorkoutSession")
-                        .WithMany("ConcreteExerciseEntries")
-                        .HasForeignKey("WorkoutSessionID");
                 });
 
             modelBuilder.Entity("WT_WebAPI.Entities.WorkoutAssets.Exercise", b =>

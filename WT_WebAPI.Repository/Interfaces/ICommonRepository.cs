@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using WT_WebAPI.Entities;
-using WT_WebAPI.Entities.DTO.WorkoutAssets;
 using WT_WebAPI.Entities.WorkoutAssets;
 
 namespace WT_WebAPI.Repository.Interfaces
@@ -87,6 +86,27 @@ namespace WT_WebAPI.Repository.Interfaces
         Task<bool> UpdateRoutinesForProgram(WorkoutProgram programEntity, List<RoutineProgramEntry> routinePrograms);
 
         Task<bool> DeleteProgram(int? userId, int? programId);
+
+        #endregion
+
+
+        #region WorkoutSessions
+
+        Task<IEnumerable<WorkoutSession>> GetSessionsForUser(int? userId, DateTime? startDate, DateTime? endDate);
+
+        Task<WorkoutSession> GetSession(int? userId, int? sessionId);
+
+        Task<WorkoutSession> GetSessionForDay(int? userId, DateTime date);
+
+        Task<WorkoutSession> AddOrUpdateSession(int? userId, 
+                                                DateTime date, 
+                                                List<WorkoutRoutine> routines, 
+                                                List<Exercise> exercises, 
+                                                List<ConcreteExercise> concreteExercises);
+
+        Task<bool> UpdateConcreteExercises(int? userId, int? sessionId, List<ConcreteExercise> concreteExercises);
+
+        Task<bool> DeleteConcreteExercises(int? userId, int? sessionId, List<int> concreteExerciseIds);
 
         #endregion
     }

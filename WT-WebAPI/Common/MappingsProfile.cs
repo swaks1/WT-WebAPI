@@ -40,16 +40,19 @@ namespace WT_WebAPI.Common
 
 
 
-            CreateMap<WorkoutSession, WorkoutSessionDTO>().ForMember(dest => dest.Exercises,
-                                               opts => opts.MapFrom(src => src.ConcreteExerciseEntries.Select(ex => ex.ConcreteExercise)));
-
-            CreateMap<WorkoutSessionDTO, WorkoutSession>().ForMember(dest => dest.ConcreteExerciseEntries,
-                                               opts => opts.MapFrom(src => src.Exercises.Select(ex => new ConcreteExerciseSessionEntry { ConcreteExerciseID = ex.ID })));
+            CreateMap<WorkoutSession, WorkoutSessionDTO>();
+            CreateMap<WorkoutSessionDTO, WorkoutSession>();
 
 
             CreateMap<Exercise, ExerciseDTO>();//.ForMember(dest => dest.User, opt => opt.Ignore());
             CreateMap<ExerciseDTO, Exercise>();
 
+            CreateMap<ConcreteExercise, ConcreteExerciseDTO>();
+            CreateMap<ConcreteExerciseDTO, ConcreteExercise>();
+
+
+            CreateMap<ConcreteExerciseAttribute, ConcreteExerciseAttributeDTO>();
+            CreateMap<ConcreteExerciseAttributeDTO, ConcreteExerciseAttribute>();
 
             CreateMap<ExerciseAttribute, ExerciseAttributeDTO>();
             CreateMap<ExerciseAttributeDTO, ExerciseAttribute>();
