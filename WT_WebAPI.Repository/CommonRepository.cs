@@ -8,6 +8,7 @@ using WT_WebAPI.Entities.DBContext;
 using WT_WebAPI.Entities.WorkoutAssets;
 using WT_WebAPI.Repository.Interfaces;
 using WT_WebAPI.Entities.Extensions;
+using WT_WebAPI.Entities.WorkoutProgress;
 
 namespace WT_WebAPI.Repository
 {
@@ -651,7 +652,120 @@ namespace WT_WebAPI.Repository
             return true;
         }
 
+        public async Task<bool> ActivateProgram(int? userId, int? programId)
+        {
+            var program = await _context.WorkoutPrograms
+                                    .Include(w => w.RoutineProgramEntries)
+                                        .ThenInclude(rout => rout.WorkoutRoutine)
+                                            .ThenInclude(rout => rout.ExerciseRoutineEntries)
+                                                .ThenInclude(en => en.Exercise)
+                                                    .ThenInclude(ex => ex.Attributes)
+                                    .SingleOrDefaultAsync(e => e.ID == programId && e.WTUserID == userId);
+            if (program == null)
+                return false;
 
+
+            foreach (var entry in program.RoutineProgramEntries)
+            {
+                var plannedDatesStrings = entry.PlannedDates.Split(";").ToList();
+                var plannedDates = new List<DateTime>();
+                foreach (var dateStr in plannedDatesStrings)
+                {
+                    DateTime date;
+                    var parseResult = DateTime.TryParse(dateStr, out date);
+                    if (parseResult == false)
+                        return false;
+
+                    plannedDates.Add(date);
+                }
+
+                foreach (var date in plannedDates)
+                {
+                    var session = await GetSessionForDay(userId, date);
+
+                    var concreteExercisesFromRoutine = new List<ConcreteExercise>();
+
+                    foreach (var er in entry.WorkoutRoutine.ExerciseRoutineEntries)
+                    {
+                        var concreteExercise = er.Exercise.GetConcreteExerciseObject();
+                        concreteExercise.ProgramId = program.ID;
+                        concreteExercise.ProgramName = program.Name;
+                        concreteExercise.WorkoutSessionID = session.ID;
+
+                        concreteExercisesFromRoutine.Add(concreteExercise);
+                    }
+
+                    //add the new Concrete Exercises which were created before...
+                    _context.ConcreteExercises.AddRange(concreteExercisesFromRoutine);
+                }
+            }
+
+            program.IsActivated = true;
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> DeactivateProgram(int? userId, int? programId)
+        {
+            var program = await _context.WorkoutPrograms
+                                       .Include(w => w.RoutineProgramEntries)
+                                       .SingleOrDefaultAsync(e => e.ID == programId && e.WTUserID == userId);
+
+            if (program == null || program.IsActivated == false)
+                return false;
+
+            foreach (var entry in program.RoutineProgramEntries)
+            {
+                var plannedDatesStrings = entry.PlannedDates.Split(";").ToList();
+                var plannedDates = new List<DateTime>();
+                foreach (var dateStr in plannedDatesStrings)
+                {
+                    DateTime date;
+                    var parseResult = DateTime.TryParse(dateStr, out date);
+                    if (parseResult == false)
+                        return false;
+
+                    plannedDates.Add(date);
+                }
+
+                foreach (var date in plannedDates)
+                {
+                    var session = await GetSessionForDay(userId, date);
+
+                    foreach (var cExercise in session.ConcreteExercises)
+                    {
+                        if (cExercise.ProgramId == program.ID)
+                        {
+                            _context.ConcreteExerciseAttribute.RemoveRange(cExercise.Attributes);
+                            _context.Remove(cExercise);
+                        }
+                    }
+                }
+            }
+
+            program.IsActivated = false;
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> DeactivateAllPrograms(int? userId)
+        {
+            var allUserProgramIds = await _context.WorkoutPrograms
+                                            .AsNoTracking()
+                                            .Where(p => p.WTUserID == userId)
+                                            .Select(item => item.ID).ToListAsync();
+
+            foreach (var programId in allUserProgramIds)
+            {
+                await DeactivateProgram(userId, programId);
+            }
+
+            return true;
+        }
         #endregion
 
         #region WorkoutSessions
@@ -708,14 +822,30 @@ namespace WT_WebAPI.Repository
 
         public async Task<WorkoutSession> AddOrUpdateSession(int? userId, DateTime date, List<WorkoutRoutine> routines, List<Exercise> exercises, List<ConcreteExercise> concreteExercises)
         {
-            var session = await GetSessionForDay(userId, date);
+            WorkoutSession session = null;
 
-            if (routines == null)
-                routines = new List<WorkoutRoutine>();
-            if (exercises == null)
-                exercises = new List<Exercise>();
-            if (concreteExercises == null)
-                concreteExercises = new List<ConcreteExercise>();
+            if (routines != null && routines.Count > 0)
+            {
+                session = await AddRoutineToSession(userId, date, routines);
+            }
+
+            if (exercises != null && exercises.Count > 0)
+            {
+                session = await AddExercisesToSession(userId, date, exercises);
+            }
+
+            if (concreteExercises != null && concreteExercises.Count > 0)
+            {
+                session = await UpdateConcreteExercises(userId, date, concreteExercises);
+            }
+
+            return session;
+        }
+
+        public async Task<WorkoutSession> AddRoutineToSession(int? userId, DateTime date, List<WorkoutRoutine> routines)
+        {
+
+            var session = await GetSessionForDay(userId, date);
 
             //get Routines form db and convert them to ConcreteExercises 
             var routinesIds = routines.Select(item => item.ID);
@@ -741,6 +871,17 @@ namespace WT_WebAPI.Repository
                 }
             }
 
+            //add the new Concrete Exercises which were created before...
+            concreteExercisesFromRoutine.ToList().ForEach(item => session.ConcreteExercises.Add(item));
+
+            await _context.SaveChangesAsync();
+
+            return session;
+        }
+
+        public async Task<WorkoutSession> AddExercisesToSession(int? userId, DateTime date, List<Exercise> exercises)
+        {
+            var session = await GetSessionForDay(userId, date);
 
             //convert Exercises to ConcreteExercises 
             var exerciseIds = exercises.Select(item => item.ID);
@@ -758,7 +899,17 @@ namespace WT_WebAPI.Repository
                 concreteExercisesFromExercises.Add(concreteExercise);
             }
 
+            //add the new Concrete Exercises which were created before...
+            concreteExercisesFromExercises.ToList().ForEach(item => session.ConcreteExercises.Add(item));
 
+            await _context.SaveChangesAsync();
+
+            return session;
+        }
+
+        public async Task<WorkoutSession> UpdateConcreteExercises(int? userId, DateTime date, List<ConcreteExercise> concreteExercises)
+        {
+            var session = await GetSessionForDay(userId, date);
 
             //Update existing concreteExercises found in the session
             foreach (var cExercise in concreteExercises)
@@ -776,11 +927,6 @@ namespace WT_WebAPI.Repository
                     concreteExerciseEntity.Attributes = cExercise.Attributes;
                 }
             }
-
-
-            //add the new Concrete Exercises which were created before...
-            concreteExercisesFromRoutine.ToList().ForEach(item => session.ConcreteExercises.Add(item));
-            concreteExercisesFromExercises.ToList().ForEach(item => session.ConcreteExercises.Add(item));
 
 
             await _context.SaveChangesAsync();
@@ -837,6 +983,155 @@ namespace WT_WebAPI.Repository
 
             return true;
         }
+
+        #endregion
+
+
+        #region BodyStatistics
+
+        public async Task<IEnumerable<BodyStatistic>> GetBodyStatisticsForUser(int? userId)
+        {
+            return await _context.BodyStatistics
+                                        .AsNoTracking()
+                                        .Include(w => w.BodyStatAttributes)
+                                        .Include(c => c.ProgressImages)
+                                        .Where(w => w.WTUserID == userId)
+                                        .ToListAsync();
+        }
+
+        public async Task<BodyStatistic> GetBodyStatistic(int? userId, int? bodyStatId)
+        {
+            return await _context.BodyStatistics
+                                .Include(w => w.BodyStatAttributes)
+                                .Include(c => c.ProgressImages)
+                                .SingleOrDefaultAsync(w => w.ID == bodyStatId && w.WTUserID == userId);
+        }
+
+        public async Task<IEnumerable<BodyStatistic>> GetBodyStatisticForMonth(int? userId, int? month)
+        {
+            return await _context.BodyStatistics
+                             .AsNoTracking()
+                             .Include(w => w.BodyStatAttributes)
+                             .Include(c => c.ProgressImages)
+                             .Where(w => w.WTUserID == userId && w.Month == month)
+                             .ToListAsync();
+        }
+
+        public async Task<BodyStatistic> AddOrUpdateBodyStatistic(int? userId, BodyStatistic bodyStat)
+        {
+            var bodyStatEntity = await _context.BodyStatistics
+                                    .Include(s => s.BodyStatAttributes)
+                                    .Include(s => s.ProgressImages)
+                                    .SingleOrDefaultAsync(s => s.WTUserID == userId
+                                                    && s.Week == bodyStat.Week
+                                                    && s.Year == bodyStat.Year && s.Month == bodyStat.Month);
+            //if doesnt exist create it
+            if(bodyStatEntity == null)
+            {
+                bodyStatEntity = new BodyStatistic
+                {
+                    Year = bodyStat.Year,
+                    Month = bodyStat.Month,
+                    Week = bodyStat.Week,
+                    WTUserID = userId,
+                    DateCreated = DateTime.Now
+                };
+                _context.BodyStatistics.Add(bodyStatEntity);
+                await _context.SaveChangesAsync();
+            }
+
+            var newAttributesIds = bodyStat.BodyStatAttributes.Select(item => item.ID);    
+
+            //remove attributes that arent present
+            var attrToBeRemoved = bodyStatEntity.BodyStatAttributes.Where(attr => !newAttributesIds.Any(id => id == attr.ID)).ToList();
+
+            var attrToBeAdded = bodyStat.BodyStatAttributes.Where(attr => !bodyStatEntity.BodyStatAttributes.Any(item => item.ID == attr.ID)).ToList();
+
+
+            //remove not attributes
+            foreach (var attribute in attrToBeRemoved)
+            {
+                bodyStatEntity.BodyStatAttributes.Remove(attribute);
+                _context.Remove(attribute);
+            }
+
+            //add new attributes
+            foreach (var attribute in attrToBeAdded)
+            {
+                attribute.ID = 0;
+                attribute.BodyStatisticID = 0;
+                bodyStatEntity.BodyStatAttributes.Add(attribute);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return bodyStatEntity;
+        }
+
+        public async Task<IEnumerable<BodyAttributeTemplate>> GetAttributeTemplatesForUser(int? userId)
+        {
+            return await _context.BodyAttributeTemplates
+                                         .AsNoTracking()
+                                         .Where(w => w.WTUserID == userId)
+                                         .ToListAsync();
+        }
+
+        public async Task<List<BodyAttributeTemplate>> UpdateAttributeTemplates(int? userId, List<BodyAttributeTemplate> bodyAttributeTemplates)
+        {
+            var user = await _context.Users
+                                    .Include(u => u.BodyAttributeTemplates)
+                                    .SingleOrDefaultAsync(u => u.ID == userId);
+            if (user == null)
+                return null;
+
+            var newAttributesIds = bodyAttributeTemplates.Select(item => item.ID);
+            var bodyAttributeTemplatesEntity = user.BodyAttributeTemplates.ToList();
+
+            //remove attributes that arent present
+            var attrToBeRemoved = bodyAttributeTemplatesEntity.Where(attr => !newAttributesIds.Any(id => id == attr.ID)).ToList();
+            _context.RemoveRange(attrToBeRemoved);
+
+            var attrToBeAdded = bodyAttributeTemplates.Where(attr => !bodyAttributeTemplatesEntity.Any(item => item.ID == attr.ID)).ToList();
+
+            //add new attributes
+            foreach (var attribute in attrToBeAdded)
+            {
+                attribute.ID = 0;
+                attribute.WTUserID = userId;
+                _context.BodyAttributeTemplates.Add(attribute);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return await _context.BodyAttributeTemplates
+                                    .Where(u => u.WTUserID == userId)
+                                    .ToListAsync();
+        }
+
+        public async Task<bool> DeleteBodyStatistic(int? userId, int? bodyStatId)
+        {
+            var bodyStatistic = await GetBodyStatistic(userId, bodyStatId);
+
+            if (bodyStatistic == null)
+                return false;
+
+            foreach (var item in bodyStatistic.BodyStatAttributes)
+            {
+                _context.Remove(item);
+            }
+            foreach(var item in bodyStatistic.ProgressImages)
+            {
+                _context.Remove(item);
+            }
+
+            _context.Remove(bodyStatistic);
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+
 
         #endregion
     }

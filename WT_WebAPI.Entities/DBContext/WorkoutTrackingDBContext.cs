@@ -20,6 +20,8 @@ namespace WT_WebAPI.Entities.DBContext
         public DbSet<WorkoutSession> WorkoutSessions { get; set; }
         public DbSet<ConcreteExercise> ConcreteExercises { get; set; }
         public DbSet<BodyStatistic> BodyStatistics { get; set; }
+        public DbSet<BodyAttributeTemplate> BodyAttributeTemplates { get; set; }
+
 
         public DbSet<ExerciseAttribute> ExerciseAttribute { get; set; }
         public DbSet<ExerciseRoutineEntry> ExerciseRoutineEntry { get; set; }

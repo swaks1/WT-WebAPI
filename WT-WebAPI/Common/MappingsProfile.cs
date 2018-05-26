@@ -59,6 +59,17 @@ namespace WT_WebAPI.Common
 
 
             CreateMap<BodyStatistic, BodyStatisticDTO>();
+            CreateMap<BodyStatisticDTO, BodyStatistic>();
+
+            CreateMap<BodyStatAttribute, BodyStatAttributeDTO>();
+            CreateMap<BodyStatAttributeDTO, BodyStatAttribute>();
+
+            CreateMap<ProgressImage, ProgressImageDTO>();
+            CreateMap<ProgressImageDTO, ProgressImage>();
+
+            CreateMap<BodyAttributeTemplate, BodyAttributeTemplateDTO>();
+            CreateMap<BodyAttributeTemplateDTO, BodyAttributeTemplate>();
+
         }
     }
 }

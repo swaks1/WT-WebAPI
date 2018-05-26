@@ -181,8 +181,8 @@ namespace WT_WebAPI.Controllers
         }
 
 
-        [HttpDelete("user/{userId}/program/{programId}")]
-        public async Task<IActionResult> DeleteRoutine([FromRoute] int? userId, [FromRoute] int? programId)
+        [HttpDelete("user/{userId}/program/{programId}", Name = "DeleteProgram")]
+        public async Task<IActionResult> DeleteProgram([FromRoute] int? userId, [FromRoute] int? programId)
         {
             if (userId == null || programId == null)
             {
@@ -203,5 +203,54 @@ namespace WT_WebAPI.Controllers
 
             return NoContent();
         }
+
+        [HttpPost("user/{userId}/program/{programId}/activate", Name = "ActivateProgram")]
+        public async Task<IActionResult> ActivateProgram([FromRoute] int? userId, [FromRoute] int? programId)
+        {
+            if (userId == null || programId == null)
+            {
+                return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return new UnprocessableEntityObjectResult(ModelState);
+            }
+
+            await _repository.DeactivateAllPrograms(userId);
+            var result = await _repository.ActivateProgram(userId, programId);
+
+            if (result == false)
+            {
+                return BadRequest("Activaton failed for program...");
+            }
+
+            return NoContent();
+        }
+
+        [HttpPost("user/{userId}/program/{programId}/deactivate", Name = "DeactivateProgram")]
+        public async Task<IActionResult> DeactivateProgram([FromRoute] int? userId, [FromRoute] int? programId)
+        {
+            if (userId == null || programId == null)
+            {
+                return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return new UnprocessableEntityObjectResult(ModelState);
+            }
+
+            var result = await _repository.DeactivateProgram(userId, programId);
+
+            if (result == false)
+            {
+                return BadRequest("Deactivation failed for program...");
+            }
+
+            return NoContent();
+        }
+
+
     }
 }

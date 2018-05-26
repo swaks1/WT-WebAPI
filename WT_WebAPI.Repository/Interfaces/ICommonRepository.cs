@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using WT_WebAPI.Entities;
 using WT_WebAPI.Entities.WorkoutAssets;
+using WT_WebAPI.Entities.WorkoutProgress;
 
 namespace WT_WebAPI.Repository.Interfaces
 {
@@ -87,6 +88,11 @@ namespace WT_WebAPI.Repository.Interfaces
 
         Task<bool> DeleteProgram(int? userId, int? programId);
 
+        Task<bool> ActivateProgram(int? userId, int? programId);
+
+        Task<bool> DeactivateProgram(int? userId, int? programId);
+
+        Task<bool> DeactivateAllPrograms(int? userId);
         #endregion
 
 
@@ -98,16 +104,43 @@ namespace WT_WebAPI.Repository.Interfaces
 
         Task<WorkoutSession> GetSessionForDay(int? userId, DateTime date);
 
-        Task<WorkoutSession> AddOrUpdateSession(int? userId, 
-                                                DateTime date, 
-                                                List<WorkoutRoutine> routines, 
-                                                List<Exercise> exercises, 
+        Task<WorkoutSession> AddOrUpdateSession(int? userId,
+                                                DateTime date,
+                                                List<WorkoutRoutine> routines,
+                                                List<Exercise> exercises,
                                                 List<ConcreteExercise> concreteExercises);
+
+        Task<WorkoutSession> AddRoutineToSession(int? userId, DateTime date, List<WorkoutRoutine> routines);
+
+        Task<WorkoutSession> AddExercisesToSession(int? userId, DateTime date, List<Exercise> exercises);
+
+        Task<WorkoutSession> UpdateConcreteExercises(int? userId, DateTime date, List<ConcreteExercise> concreteExercises);
 
         Task<bool> UpdateConcreteExercises(int? userId, int? sessionId, List<ConcreteExercise> concreteExercises);
 
         Task<bool> DeleteConcreteExercises(int? userId, int? sessionId, List<int> concreteExerciseIds);
 
         #endregion
+
+
+
+        #region BodyStatistics
+
+        Task<IEnumerable<BodyStatistic>> GetBodyStatisticsForUser(int? userId);
+
+        Task<BodyStatistic> GetBodyStatistic(int? userId, int? bodyStatId);
+
+        Task<IEnumerable<BodyStatistic>> GetBodyStatisticForMonth(int? userId, int? month);
+
+        Task<IEnumerable<BodyAttributeTemplate>> GetAttributeTemplatesForUser(int? userId);
+
+        Task<List<BodyAttributeTemplate>> UpdateAttributeTemplates(int? userId, List<BodyAttributeTemplate> bodyAttributeTemplates);
+
+        Task<BodyStatistic> AddOrUpdateBodyStatistic(int? userId, BodyStatistic bodyStat);
+        
+        Task<bool> DeleteBodyStatistic(int? userId, int? bodyStatId);
+
+        #endregion
+
     }
 }

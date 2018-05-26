@@ -13,8 +13,8 @@ namespace WT_WebAPI.Entities.WorkoutProgress
         public int Month { get; set; }
         public int Week { get; set; }
 
-        public ICollection<BodyStatAttribute> BodyStatAttributes { get; set; }
-        public ICollection<ProgressImage> ProgressImages { get; set; }
+        public ICollection<BodyStatAttribute> BodyStatAttributes { get; set; } = new List<BodyStatAttribute>();
+        public ICollection<ProgressImage> ProgressImages { get; set; } = new List<ProgressImage>();
 
         public int? WTUserID { get; set; }
         public WTUser User { get; set; }

@@ -43,7 +43,8 @@ namespace WT_WebAPI
 
             services.AddScoped<ICommonRepository, CommonRepository>();
 
-            services.AddMvc().AddJsonOptions(options => {
+            services.AddMvc().AddJsonOptions(options =>
+            {
                 options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
                 options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
             }); ;
@@ -52,8 +53,9 @@ namespace WT_WebAPI
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new Info { Title = "WT-WebAPI", Version = "v1" });
+                c.SwaggerDoc("v1", new Info { Title = "Workout Tracking System - WebAPI", Version = "v1", Description = "ASP.NET Core 2.0 Web API used as a part of the Workout tracking system", });
             });
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -83,7 +85,7 @@ namespace WT_WebAPI
 
                     });
                 });
-                
+
             }
 
             #region Swagger
@@ -99,7 +101,7 @@ namespace WT_WebAPI
             });
 
             #endregion
-         
+
             app.UseMvc();
         }
     }

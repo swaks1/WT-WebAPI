@@ -23,6 +23,7 @@ namespace WT_WebAPI.Entities
         public ICollection<WorkoutProgram> WorkoutPrograms { get; set; }
         public ICollection<WorkoutSession> WorkoutSession { get; set; }
         public ICollection<BodyStatistic> BodyStatistics { get; set; }
-        
+        public ICollection<BodyAttributeTemplate> BodyAttributeTemplates { get; set; }
+
     }
 }

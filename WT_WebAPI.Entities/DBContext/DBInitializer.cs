@@ -87,6 +87,19 @@ namespace WT_WebAPI.Entities.DBContext
 
 
 
+            var bodyAttributeTemplate = new BodyAttributeTemplate[]
+            {
+                new BodyAttributeTemplate{AttributeName = "Template Attr 1", AttributeValue = "OK1", WTUserID = 1, IsDeletable = true},
+                new BodyAttributeTemplate{AttributeName = "Template Attr 2", AttributeValue = "OK2", WTUserID = 1, IsDeletable = true},
+                new BodyAttributeTemplate{AttributeName = "Template Attr 3", AttributeValue = "NO1", WTUserID = 2, IsDeletable = true},
+                new BodyAttributeTemplate{AttributeName = "Template Attr 4" , AttributeValue = "NO2", WTUserID = 2, IsDeletable = true}
+            };
+            context.BodyAttributeTemplates.AddRange(bodyAttributeTemplate);
+            context.SaveChanges();
+
+
+
+
             var exerciseAttribute1 = new ExerciseAttribute { AttributeName = "Riste Cust Attr 1", AttributeValue = "value1", ExerciseID = 1, IsDeletable = true };
             var exerciseAttribute2 = new ExerciseAttribute { AttributeName = "Riste Cust Attr 2", AttributeValue = "value2", ExerciseID = 2, IsDeletable = true };
             var exerciseAttribute3 = new ExerciseAttribute { AttributeName = "Monkas Cust Attr 1", AttributeValue = "value1", ExerciseID = 3, IsDeletable = true };
@@ -193,9 +206,9 @@ namespace WT_WebAPI.Entities.DBContext
 
 
 
-            var routineProgramEntry1 = new RoutineProgramEntry { WorkoutRoutineID = 1, WorkoutProgramID = 1 };
-            var routineProgramEntry2 = new RoutineProgramEntry { WorkoutRoutineID = 2, WorkoutProgramID = 1 };
-            var routineProgramEntry3 = new RoutineProgramEntry { WorkoutRoutineID = 1, WorkoutProgramID = 2 };
+            var routineProgramEntry1 = new RoutineProgramEntry { WorkoutRoutineID = 1, WorkoutProgramID = 1, PlannedDates = "2018-05-26;2018-06-01" };
+            var routineProgramEntry2 = new RoutineProgramEntry { WorkoutRoutineID = 2, WorkoutProgramID = 1, PlannedDates = "2018-05-29" };
+            var routineProgramEntry3 = new RoutineProgramEntry { WorkoutRoutineID = 1, WorkoutProgramID = 2, PlannedDates = "2018-07-26;2018-07-27" };
 
             var program = context.WorkoutPrograms.SingleOrDefault(u => u.ID == 1);
             program.RoutineProgramEntries = new List<RoutineProgramEntry>();
@@ -206,9 +219,9 @@ namespace WT_WebAPI.Entities.DBContext
             program.RoutineProgramEntries = new List<RoutineProgramEntry>();
             program.RoutineProgramEntries.Add(routineProgramEntry3);
 
-            var routineProgramEntry4 = new RoutineProgramEntry { WorkoutRoutineID = 3, WorkoutProgramID = 3 };
-            var routineProgramEntry5 = new RoutineProgramEntry { WorkoutRoutineID = 4, WorkoutProgramID = 3 };
-            var routineProgramEntry6 = new RoutineProgramEntry { WorkoutRoutineID = 3, WorkoutProgramID = 4 };
+            var routineProgramEntry4 = new RoutineProgramEntry { WorkoutRoutineID = 3, WorkoutProgramID = 3, PlannedDates = "2018-01-26;2018-01-27" };
+            var routineProgramEntry5 = new RoutineProgramEntry { WorkoutRoutineID = 4, WorkoutProgramID = 3, PlannedDates = "2018-02-26" };
+            var routineProgramEntry6 = new RoutineProgramEntry { WorkoutRoutineID = 3, WorkoutProgramID = 4, PlannedDates = "2018-03-26;2018-03-27" };
 
             program = context.WorkoutPrograms.SingleOrDefault(u => u.ID == 3);
             program.RoutineProgramEntries = new List<RoutineProgramEntry>();
