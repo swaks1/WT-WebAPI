@@ -29,10 +29,10 @@ namespace WT_WebAPI.Entities.DBContext
 
             var exercises = new Exercise[]
             {
-                new Exercise{Name = "Riste Execise 1", WTUserID = 1,Category = Category.ARMS,Description ="Riste Execise Desc 1",IsEditable = true},
-                new Exercise{Name = "Riste Execise 2", WTUserID = 1,Category = Category.CHEST,Description ="Riste Execise Desc 2",IsEditable = true},
-                new Exercise{Name = "Monkas Execise 1", WTUserID = 2,Category = Category.LEGS,Description ="Monkas Execise Desc 1",IsEditable = true},
-                new Exercise{Name = "Monkas Execise 2", WTUserID = 2,Category = Category.OTHER,Description ="Monkas Execise Desc 2",IsEditable = true},
+                new Exercise{Name = "Riste Execise 1", WTUserID = 1,Category = Category.ARMS,Description ="Riste Execise Desc 1",IsEditable = true, ImagePath="Images/monkas.jpg"},
+                new Exercise{Name = "Riste Execise 2", WTUserID = 1,Category = Category.CHEST,Description ="Riste Execise Desc 2",IsEditable = true, ImagePath="Images/monkas.jpg"},
+                new Exercise{Name = "Monkas Execise 1", WTUserID = 2,Category = Category.LEGS,Description ="Monkas Execise Desc 1",IsEditable = true, ImagePath="Images/monkas.jpg"},
+                new Exercise{Name = "Monkas Execise 2", WTUserID = 2,Category = Category.OTHER,Description ="Monkas Execise Desc 2",IsEditable = true, ImagePath="Images/monkas.jpg"}
             };
             context.Exercises.AddRange(exercises);
             context.SaveChanges();

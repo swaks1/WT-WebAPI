@@ -283,6 +283,22 @@ namespace WT_WebAPI.Repository
 
             return true;
         }
+
+        public async Task<bool> UpdateImageForExercise(int Id, string imagePath)
+        {
+            var exerciseEntity = await _context.Exercises                                    
+                                    .SingleOrDefaultAsync(e => e.ID == Id);
+
+            if (exerciseEntity == null)
+                return false;
+          
+            exerciseEntity.ImagePath = imagePath;
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
         #endregion
 
 
@@ -1130,6 +1146,8 @@ namespace WT_WebAPI.Repository
 
             return true;
         }
+
+
 
 
 

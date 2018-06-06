@@ -26,7 +26,7 @@ namespace WT_WebAPI
     {
 
         public IConfiguration Configuration { get; }
-        private readonly ILogger<Startup> _logger;
+        private readonly ILogger<Startup> _logger; 
 
         public Startup(IConfiguration configuration, ILogger<Startup> logger)
         {
@@ -101,6 +101,8 @@ namespace WT_WebAPI
             });
 
             #endregion
+
+            app.UseStaticFiles();
 
             app.UseMvc();
         }

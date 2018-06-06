@@ -46,6 +46,8 @@ namespace WT_WebAPI.Repository.Interfaces
 
         Task<bool> DeleteAttribite(int? userId, int? exerciseID, int? attributeId);
 
+        Task<bool> UpdateImageForExercise(int iD, string imagePath);
+
         #endregion
 
 

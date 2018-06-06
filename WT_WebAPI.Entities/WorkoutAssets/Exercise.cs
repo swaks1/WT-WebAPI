@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
 namespace WT_WebAPI.Entities.WorkoutAssets
@@ -13,6 +14,8 @@ namespace WT_WebAPI.Entities.WorkoutAssets
         public string Description { get; set; }
         public string ImagePath { get; set; }
         public bool IsEditable { get; set; }
+        [NotMapped]
+        public byte[] ImageBytes { get; set; }
 
 
         //Relationships (Navigational properties)

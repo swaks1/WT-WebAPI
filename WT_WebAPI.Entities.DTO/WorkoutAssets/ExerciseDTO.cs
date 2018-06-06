@@ -14,7 +14,8 @@ namespace WT_WebAPI.Entities.DTO.WorkoutAssets
         public Category Category { get; set; }
         public string Description { get; set; }
         public string ImagePath { get; set; }
-        public bool IsEditable { get; set; }
+        public bool IsEditable { get; set; }       
+        public byte[] ImageBytes { get; set; }
 
 
         public int? WTUserID { get; set; }

@@ -1,8 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using WT_WebAPI.Common;
 using WT_WebAPI.Entities.DTO.WorkoutAssets;
 using WT_WebAPI.Entities.WorkoutAssets;
@@ -15,10 +19,15 @@ namespace WT_WebAPI.Controllers
     public class ExercisesController : Controller
     {
         private readonly ICommonRepository _repository;
+        private readonly IHostingEnvironment _hostingEnvironment;
+        private readonly ILogger<ExercisesController> _logger;
 
-        public ExercisesController(ICommonRepository repository)
+
+        public ExercisesController(ICommonRepository repository, IHostingEnvironment hostingEnvironment, ILogger<ExercisesController> logger)
         {
             _repository = repository;
+            _hostingEnvironment = hostingEnvironment;
+            _logger = logger;
         }
 
         [HttpGet("user/{userId}", Name = "GetExercises")]
@@ -58,7 +67,7 @@ namespace WT_WebAPI.Controllers
                 return new UnprocessableEntityObjectResult(ModelState);
             }
 
-            var exercise = await _repository.GetExercise(userId,exerciseId);
+            var exercise = await _repository.GetExercise(userId, exerciseId);
 
             if (exercise == null)
             {
@@ -89,12 +98,20 @@ namespace WT_WebAPI.Controllers
                 return NotFound("User Doesn't Exist");
             }
 
+            exerciseDTO.WTUserID = userId;
             var exerciseEntity = Mapper.Map<Exercise>(exerciseDTO);
+
             var result = await _repository.AddExerciseForUser(userId, exerciseEntity);
 
             if (result == false)
             {
                 return BadRequest("Add Failed...");
+            }
+
+
+            if (exerciseEntity.ImageBytes != null && exerciseEntity.ImageBytes.Length != 0)
+            {
+                var imageResult = SaveExerciseImage(exerciseEntity);
             }
 
             var exerciseToReturn = Mapper.Map<ExerciseDTO>(exerciseEntity);
@@ -125,8 +142,13 @@ namespace WT_WebAPI.Controllers
 
             exerciseDTO.WTUserID = userId;
             exerciseDTO.ID = (int)exerciseId;
-            var wtUserEntity = Mapper.Map<Exercise>(exerciseDTO);
-            var result = await _repository.UpdateExercise(wtUserEntity);
+            var wtExerciseEntity = Mapper.Map<Exercise>(exerciseDTO);
+            var result = await _repository.UpdateExercise(wtExerciseEntity);
+
+            if (wtExerciseEntity.ImageBytes != null && wtExerciseEntity.ImageBytes.Length != 0)
+            {
+                var imageResult = await SaveExerciseImage(wtExerciseEntity);
+            }
 
             if (result == false)
             {
@@ -208,6 +230,54 @@ namespace WT_WebAPI.Controllers
             }
 
             return NoContent();
+        }
+
+
+        private async Task<bool> SaveExerciseImage(Exercise exerciseEntity)
+        {
+            try
+            {
+                // get this environment's web root path (the path
+                // from which static content, like an image, is served)
+                var webRootPath = _hostingEnvironment.WebRootPath;
+                string folderName = "Images/Exercises/" + exerciseEntity.WTUserID.ToString();
+                string fullFolderPath = $"{webRootPath}/{folderName}/";
+
+
+                // create the filename
+                string imageName = exerciseEntity.ImagePath;
+                var imageExtension = imageName.Substring(imageName.LastIndexOf("."));
+
+                string fileName = "exercise_" + exerciseEntity.ID + "_" + Guid.NewGuid() + imageExtension;
+
+                //delete previuos image
+                string[] fileList = Directory.GetFiles(fullFolderPath, $"*exercise_{exerciseEntity.ID}*");
+                foreach (var fileToDelete in fileList)
+                {
+                    System.IO.File.Delete(fileToDelete);
+                }
+
+                // the full file path
+                var filePath = Path.Combine($"{fullFolderPath}/{fileName}");
+
+                // create path if not exists... write bytes and auto-close stream
+                FileInfo file = new FileInfo(filePath);
+                file.Directory.Create();
+                System.IO.File.WriteAllBytes(filePath, exerciseEntity.ImageBytes);
+
+                // fill out the filename
+                exerciseEntity.ImagePath = folderName + "/" + fileName;
+
+                await _repository.UpdateImageForExercise(exerciseEntity.ID, exerciseEntity.ImagePath);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(500, ex, ex.Message);
+                return false;
+            }
+
         }
     }
 }
