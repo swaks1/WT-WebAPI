@@ -100,10 +100,10 @@ namespace WT_WebAPI.Entities.DBContext
 
 
 
-            var exerciseAttribute1 = new ExerciseAttribute { AttributeName = "Riste Cust Attr 1", AttributeValue = "value1", ExerciseID = 1, IsDeletable = true };
-            var exerciseAttribute2 = new ExerciseAttribute { AttributeName = "Riste Cust Attr 2", AttributeValue = "value2", ExerciseID = 2, IsDeletable = true };
-            var exerciseAttribute3 = new ExerciseAttribute { AttributeName = "Monkas Cust Attr 1", AttributeValue = "value1", ExerciseID = 3, IsDeletable = true };
-            var exerciseAttribute4 = new ExerciseAttribute { AttributeName = "Monkas Cust Attr 2", AttributeValue = "value2", ExerciseID = 4, IsDeletable = true };
+            var exerciseAttribute1 = new ExerciseAttribute { AttributeName = "Sets", AttributeValue = "value1", ExerciseID = 1, IsDeletable = false };
+            var exerciseAttribute2 = new ExerciseAttribute { AttributeName = "Repetitions", AttributeValue = "value2", ExerciseID = 2, IsDeletable = false };
+            var exerciseAttribute3 = new ExerciseAttribute { AttributeName = "Sets", AttributeValue = "value1", ExerciseID = 3, IsDeletable = false };
+            var exerciseAttribute4 = new ExerciseAttribute { AttributeName = "Repetitions", AttributeValue = "value2", ExerciseID = 4, IsDeletable = false };
 
             var exercise = context.Exercises.SingleOrDefault(e => e.ID == 1);
             exercise.Attributes = new List<ExerciseAttribute>();

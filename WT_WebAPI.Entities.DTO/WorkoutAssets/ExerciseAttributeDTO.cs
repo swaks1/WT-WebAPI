@@ -10,7 +10,7 @@ namespace WT_WebAPI.Entities.DTO.WorkoutAssets
 
         public string AttributeName { get; set; }
         public string AttributeValue { get; set; }
-        public bool IsDeletable { get; set; }
+        public bool IsDeletable { get; set; } = true;
 
         public int? ExerciseID { get; set; }
     }

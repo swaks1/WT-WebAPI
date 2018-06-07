@@ -146,6 +146,9 @@ namespace WT_WebAPI.Repository
 
             exercise.ID = 0;
             exercise.WTUserID = userId;
+            if (string.IsNullOrEmpty(exercise.ImagePath))
+                exercise.ImagePath = "Images/monkas.jpg";
+
             foreach (var attr in exercise.Attributes)
             {
                 attr.ID = 0;
@@ -212,7 +215,7 @@ namespace WT_WebAPI.Repository
                 return false;
 
             //remove attributes that arent present
-            var attrToBeRemoved = exerciseEntity.Attributes.Where(attr => !exerciseAttributes.Any(a => a.ID == attr.ID)).ToList();
+            var attrToBeRemoved = exerciseEntity.Attributes.Where(attr => !exerciseAttributes.Any(a => a.ID == attr.ID) && attr.IsDeletable == true).ToList();
             _context.RemoveRange(attrToBeRemoved);
 
             //update existing and make list for new attributes
