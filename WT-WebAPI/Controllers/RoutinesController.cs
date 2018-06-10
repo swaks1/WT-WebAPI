@@ -1,8 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using WT_WebAPI.Common;
 using WT_WebAPI.Entities.DTO.WorkoutAssets;
 using WT_WebAPI.Entities.WorkoutAssets;
@@ -16,10 +20,14 @@ namespace WT_WebAPI.Controllers
     public class RoutinesController : Controller
     {
         private readonly ICommonRepository _repository;
+        private readonly IHostingEnvironment _hostingEnvironment;
+        private readonly ILogger<ExercisesController> _logger;
 
-        public RoutinesController(ICommonRepository repository)
+        public RoutinesController(ICommonRepository repository, IHostingEnvironment hostingEnvironment, ILogger<ExercisesController> logger)
         {
             _repository = repository;
+            _hostingEnvironment = hostingEnvironment;
+            _logger = logger;
         }
 
 
@@ -90,12 +98,18 @@ namespace WT_WebAPI.Controllers
                 return NotFound("User Doesn't Exist");
             }
 
+            routineDto.WTUserID = userId;
             var routineEntity = Mapper.Map<WorkoutRoutine>(routineDto);
             var result = await _repository.AddRoutineForUser(userId, routineEntity);
 
             if (result == false)
             {
                 return BadRequest("Add Failed for Routine...");
+            }
+
+            if (routineEntity.ImageBytes != null && routineEntity.ImageBytes.Length != 0)
+            {
+                var imageResult = await SaveRoutineImage(routineEntity);
             }
 
             var routineToReturn = Mapper.Map<WorkoutRoutineDTO>(routineEntity);
@@ -132,6 +146,11 @@ namespace WT_WebAPI.Controllers
             if (result == false)
             {
                 return BadRequest("Update failed for routine...");
+            }
+
+            if (wtURoutineEntity.ImageBytes != null && wtURoutineEntity.ImageBytes.Length != 0)
+            {
+                var imageResult = await SaveRoutineImage(wtURoutineEntity);
             }
 
             return NoContent();
@@ -209,6 +228,54 @@ namespace WT_WebAPI.Controllers
             }
 
             return NoContent();
+        }
+
+
+        private async Task<bool> SaveRoutineImage(WorkoutRoutine routineEntity)
+        {
+            try
+            {
+                // get this environment's web root path (the path
+                // from which static content, like an image, is served)
+                var webRootPath = _hostingEnvironment.WebRootPath;
+                string folderName = "Images/Routines/" + routineEntity.WTUserID.ToString();
+                string fullFolderPath = $"{webRootPath}/{folderName}/";
+
+                // create path if not exists... write bytes and auto-close stream
+                FileInfo file = new FileInfo(fullFolderPath);
+                file.Directory.Create();
+
+                // create the filename
+                string imageName = routineEntity.ImagePath;
+                var imageExtension = imageName.Substring(imageName.LastIndexOf("."));
+
+                string fileName = "routine_" + routineEntity.ID + "_" + Guid.NewGuid() + imageExtension;
+
+                //delete previuos image
+                string[] fileList = Directory.GetFiles(fullFolderPath, $"*routine__{routineEntity.ID}*");
+                foreach (var fileToDelete in fileList)
+                {
+                    System.IO.File.Delete(fileToDelete);
+                }
+
+                // the full file path
+                var filePath = Path.Combine($"{fullFolderPath}/{fileName}");
+
+                System.IO.File.WriteAllBytes(filePath, routineEntity.ImageBytes);
+
+                // fill out the filename
+                routineEntity.ImagePath = folderName + "/" + fileName;
+
+                await _repository.UpdateImageForRoutine(routineEntity.ID, routineEntity.ImagePath);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(500, ex, ex.Message);
+                return false;
+            }
+
         }
     }
 }

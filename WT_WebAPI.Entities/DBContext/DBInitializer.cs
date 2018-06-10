@@ -40,10 +40,10 @@ namespace WT_WebAPI.Entities.DBContext
 
             var routines = new WorkoutRoutine[]
             {
-                new WorkoutRoutine{Name = "Riste Workout 1",Description = "Riste Routine Desc 1", WTUserID = 1},
-                new WorkoutRoutine{Name = "Riste Workout 2",Description = "Riste Routine Desc 2", WTUserID = 1},
-                new WorkoutRoutine{Name = "Monkas Workout 1",Description = "Monkas Routine Desc 1", WTUserID = 2},
-                new WorkoutRoutine{Name = "Monkas Workout 1",Description = "Monkas Routine Desc 2" ,WTUserID =2 }
+                new WorkoutRoutine{Name = "Riste Workout 1",Description = "Riste Routine Desc 1", WTUserID = 1, ImagePath = "Images/monkasRoutine.jpg"},
+                new WorkoutRoutine{Name = "Riste Workout 2",Description = "Riste Routine Desc 2", WTUserID = 1, ImagePath = "Images/monkasRoutine.jpg"},
+                new WorkoutRoutine{Name = "Monkas Workout 1",Description = "Monkas Routine Desc 1", WTUserID = 2,ImagePath = "Images/monkasRoutine.jpg"},
+                new WorkoutRoutine{Name = "Monkas Workout 1",Description = "Monkas Routine Desc 2" ,WTUserID = 2 ,ImagePath = "Images/monkasRoutine.jpg"}
             };
             context.WorkoutRoutines.AddRange(routines);
             context.SaveChanges();

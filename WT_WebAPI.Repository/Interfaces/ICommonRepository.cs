@@ -71,6 +71,8 @@ namespace WT_WebAPI.Repository.Interfaces
 
         Task<bool> DeleteRoutine(int? userId, int? routineID);
 
+        Task<bool> UpdateImageForRoutine(int Id, string imagePath);
+
         #endregion
 
 

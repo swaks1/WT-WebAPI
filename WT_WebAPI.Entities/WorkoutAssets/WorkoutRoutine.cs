@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
 namespace WT_WebAPI.Entities.WorkoutAssets
@@ -12,7 +13,8 @@ namespace WT_WebAPI.Entities.WorkoutAssets
         public string Description { get; set; }
         public string ImagePath { get; set; }
         public string PlannedDates { get; set; }
-
+        [NotMapped]
+        public byte[] ImageBytes { get; set; }
 
         public int? WTUserID { get; set; }
         public WTUser WTUser  { get; set; }

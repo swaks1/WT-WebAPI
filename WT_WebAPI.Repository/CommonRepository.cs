@@ -341,6 +341,8 @@ namespace WT_WebAPI.Repository
             routine.WTUserID = userId;
             routine.ExerciseRoutineEntries.ToList().ForEach(item => item.WorkoutRoutineID = routine.ID);
             routine.RoutineProgramEntries.ToList().ForEach(item => item.WorkoutRoutineID = routine.ID);
+            if (string.IsNullOrEmpty(routine.ImagePath))
+                routine.ImagePath = "Images/monkas.jpg";
 
 
             //check if the posted programIDs or exerciseIDs belong to the user
@@ -509,6 +511,21 @@ namespace WT_WebAPI.Repository
             _context.ExerciseRoutineEntry.RemoveRange(_context.ExerciseRoutineEntry.Where(item => item.WorkoutRoutineID == routineID));
             _context.RoutineProgramEntry.RemoveRange(_context.RoutineProgramEntry.Where(item => item.WorkoutRoutineID == routineID));
             _context.Remove(routineEntity);
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> UpdateImageForRoutine(int Id, string imagePath)
+        {
+            var routineEntity = await _context.WorkoutRoutines
+                                    .SingleOrDefaultAsync(e => e.ID == Id);
+
+            if (routineEntity == null)
+                return false;
+
+            routineEntity.ImagePath = imagePath;
 
             await _context.SaveChangesAsync();
 

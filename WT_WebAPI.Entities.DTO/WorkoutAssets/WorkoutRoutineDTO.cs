@@ -12,7 +12,7 @@ namespace WT_WebAPI.Entities.DTO.WorkoutAssets
         public string Description { get; set; }
         public string ImagePath { get; set; }
         public string PlannedDates { get; set; }
-
+        public byte[] ImageBytes { get; set; }
 
         public int? WTUserID { get; set; }
 

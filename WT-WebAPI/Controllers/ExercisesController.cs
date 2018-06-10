@@ -111,7 +111,7 @@ namespace WT_WebAPI.Controllers
 
             if (exerciseEntity.ImageBytes != null && exerciseEntity.ImageBytes.Length != 0)
             {
-                var imageResult = SaveExerciseImage(exerciseEntity);
+                var imageResult = await SaveExerciseImage(exerciseEntity);
             }
 
             var exerciseToReturn = Mapper.Map<ExerciseDTO>(exerciseEntity);
@@ -145,14 +145,14 @@ namespace WT_WebAPI.Controllers
             var wtExerciseEntity = Mapper.Map<Exercise>(exerciseDTO);
             var result = await _repository.UpdateExercise(wtExerciseEntity);
 
-            if (wtExerciseEntity.ImageBytes != null && wtExerciseEntity.ImageBytes.Length != 0)
-            {
-                var imageResult = await SaveExerciseImage(wtExerciseEntity);
-            }
-
             if (result == false)
             {
                 return BadRequest("Update failed...");
+            }
+
+            if (wtExerciseEntity.ImageBytes != null && wtExerciseEntity.ImageBytes.Length != 0)
+            {
+                var imageResult = await SaveExerciseImage(wtExerciseEntity);
             }
 
             return NoContent();
@@ -243,6 +243,9 @@ namespace WT_WebAPI.Controllers
                 string folderName = "Images/Exercises/" + exerciseEntity.WTUserID.ToString();
                 string fullFolderPath = $"{webRootPath}/{folderName}/";
 
+                // create path if not exists... write bytes and auto-close stream
+                FileInfo file = new FileInfo(fullFolderPath);
+                file.Directory.Create();
 
                 // create the filename
                 string imageName = exerciseEntity.ImagePath;
@@ -260,9 +263,6 @@ namespace WT_WebAPI.Controllers
                 // the full file path
                 var filePath = Path.Combine($"{fullFolderPath}/{fileName}");
 
-                // create path if not exists... write bytes and auto-close stream
-                FileInfo file = new FileInfo(filePath);
-                file.Directory.Create();
                 System.IO.File.WriteAllBytes(filePath, exerciseEntity.ImageBytes);
 
                 // fill out the filename
