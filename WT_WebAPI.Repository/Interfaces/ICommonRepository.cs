@@ -126,6 +126,8 @@ namespace WT_WebAPI.Repository.Interfaces
 
         Task<bool> DeleteConcreteExercises(int? userId, int? sessionId, List<int> concreteExerciseIds);
 
+        Task<bool> DeleteConcreteExercisesFromRoutine(int? userId, int? sessionId, List<int> routineIds);
+
         #endregion
 
 
@@ -145,7 +147,7 @@ namespace WT_WebAPI.Repository.Interfaces
         Task<BodyStatistic> AddOrUpdateBodyStatistic(int? userId, BodyStatistic bodyStat);
         
         Task<bool> DeleteBodyStatistic(int? userId, int? bodyStatId);
-        
+
         #endregion
 
     }

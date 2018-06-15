@@ -211,5 +211,32 @@ namespace WT_WebAPI.Controllers
 
             return NoContent();
         }
+
+
+        [HttpPost("user/{userId}/session/{sessionId}/DeleteConcreteExercisesFromRoutine")]
+        public async Task<IActionResult> DeleteConcreteExercisesFromRoutine([FromRoute] int? userId, [FromRoute] int? sessionId, [FromBody] List<int> routineIds)
+        {
+            if (userId == null || sessionId == null)
+            {
+                return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return new UnprocessableEntityObjectResult(ModelState);
+            }
+
+            var result = await _repository.DeleteConcreteExercisesFromRoutine(userId, sessionId, routineIds);
+
+            if (result == false)
+            {
+                return NotFound();
+            }
+
+            return NoContent();
+        }
+
+
+        
     }
 }

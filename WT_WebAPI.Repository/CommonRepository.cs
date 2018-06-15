@@ -1043,6 +1043,28 @@ namespace WT_WebAPI.Repository
             return true;
         }
 
+        public async Task<bool> DeleteConcreteExercisesFromRoutine(int? userId, int? sessionId, List<int> routineIds)
+        {
+            var sessionEntity = await GetSession(userId, sessionId);
+
+            if (sessionEntity == null)
+                return false;
+
+            foreach (var id in routineIds)
+            {
+                var concreteExerciseEntities = sessionEntity.ConcreteExercises.Where(item => item.RoutineId == id);
+                foreach(var concreteExerciseEntity in concreteExerciseEntities)
+                {
+                    _context.ConcreteExerciseAttribute.RemoveRange(concreteExerciseEntity.Attributes);
+                    _context.Remove(concreteExerciseEntity);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
         #endregion
 
 
