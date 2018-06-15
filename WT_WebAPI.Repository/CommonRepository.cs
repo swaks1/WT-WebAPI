@@ -998,6 +998,29 @@ namespace WT_WebAPI.Repository
             return true;
         }
 
+        public async Task<bool> UpdateConcreteExercisesAttributes(int? userId, int? sessionId, List<ConcreteExercise> concreteExercises)
+        {
+            var sessionEntity = await GetSession(userId, sessionId);
+
+            if (sessionEntity == null)
+                return false;
+
+            foreach (var cExercise in concreteExercises)
+            {
+                var concreteExerciseEntity = sessionEntity.ConcreteExercises.FirstOrDefault(item => item.ID == cExercise.ID);
+                if (concreteExerciseEntity != null)
+                {
+                    cExercise.Attributes.ToList().ForEach(item => item.ID = 0);
+                    _context.ConcreteExerciseAttribute.RemoveRange(concreteExerciseEntity.Attributes);
+                    concreteExerciseEntity.Attributes = cExercise.Attributes;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
         public async Task<bool> DeleteConcreteExercises(int? userId, int? sessionId, List<int> concreteExerciseIds)
         {
             var sessionEntity = await GetSession(userId, sessionId);
@@ -1166,9 +1189,6 @@ namespace WT_WebAPI.Repository
 
             return true;
         }
-
-
-
 
 
         #endregion

@@ -163,8 +163,33 @@ namespace WT_WebAPI.Controllers
             return NoContent();
         }
 
+        [HttpPut("user/{userId}/session/{sessionId}/UpdateConcreteExercisesAttributes", Name = "UpdateConcreteExercisesAttributes")]
+        public async Task<IActionResult> UpdateConcreteExercisesAttributes([FromRoute] int? userId, [FromRoute] int? sessionId, [FromBody] WorkoutSessionRequest sessionRequest)
+        {
+            if (userId == null || sessionId == null)
+            {
+                return BadRequest();
+            }
 
-        [HttpDelete("user/{userId}/session/{sessionId}/DeleteConcreteExercises")]
+            if (!ModelState.IsValid)
+            {
+                return new UnprocessableEntityObjectResult(ModelState);
+            }
+
+            var concreteExercises = Mapper.Map<List<ConcreteExercise>>(sessionRequest.ConcreteExercises);
+
+            var result = await _repository.UpdateConcreteExercisesAttributes(userId, sessionId, concreteExercises);
+
+            if (result == false)
+            {
+                return BadRequest("Update failed for concrete exercises attributes ...");
+            }
+
+            return NoContent();
+        }
+
+
+        [HttpPost("user/{userId}/session/{sessionId}/DeleteConcreteExercises")]
         public async Task<IActionResult> DeleteConcreteExercises([FromRoute] int? userId, [FromRoute] int? sessionId, [FromBody] List<int> concreteExerciseIds)
         {
             if (userId == null || sessionId == null)
