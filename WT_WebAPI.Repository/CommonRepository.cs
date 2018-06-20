@@ -342,7 +342,7 @@ namespace WT_WebAPI.Repository
             routine.ExerciseRoutineEntries.ToList().ForEach(item => item.WorkoutRoutineID = routine.ID);
             routine.RoutineProgramEntries.ToList().ForEach(item => item.WorkoutRoutineID = routine.ID);
             if (string.IsNullOrEmpty(routine.ImagePath))
-                routine.ImagePath = "Images/monkas.jpg";
+                routine.ImagePath = "Images/monkasRoutine.jpg";
 
 
             //check if the posted programIDs or exerciseIDs belong to the user
@@ -389,10 +389,10 @@ namespace WT_WebAPI.Repository
             if (updateExercisesResult == false)
                 return false;
 
-            routine.RoutineProgramEntries.ToList().ForEach(item => item.WorkoutRoutineID = routineEntity.ID);
-            var updateProgramsResult = await UpdateProgramsForRoutine(routineEntity, routine.RoutineProgramEntries.ToList());
-            if (updateProgramsResult == false)
-                return false;
+            //routine.RoutineProgramEntries.ToList().ForEach(item => item.WorkoutRoutineID = routineEntity.ID);
+            //var updateProgramsResult = await UpdateProgramsForRoutine(routineEntity, routine.RoutineProgramEntries.ToList());
+            //if (updateProgramsResult == false)
+            //    return false;
 
             routineEntity.Name = routine.Name;
             routineEntity.PlannedDates = routine.PlannedDates;
@@ -567,6 +567,8 @@ namespace WT_WebAPI.Repository
             program.ID = 0;
             program.WTUserID = userId;
             program.RoutineProgramEntries.ToList().ForEach(item => item.WorkoutProgramID = program.ID);
+            if (string.IsNullOrEmpty(program.ImagePath))
+                program.ImagePath = "Images/monkasProgram.png";
 
 
             //check if the posted routinesIds belong to the user
@@ -802,6 +804,22 @@ namespace WT_WebAPI.Repository
 
             return true;
         }
+
+        public async Task<bool> UpdateImageForProgram(int Id, string imagePath)
+        {
+            var programEntity = await _context.WorkoutPrograms
+                        .SingleOrDefaultAsync(e => e.ID == Id);
+
+            if (programEntity == null)
+                return false;
+
+            programEntity.ImagePath = imagePath;
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
         #endregion
 
         #region WorkoutSessions
@@ -1211,7 +1229,6 @@ namespace WT_WebAPI.Repository
 
             return true;
         }
-
 
         #endregion
     }

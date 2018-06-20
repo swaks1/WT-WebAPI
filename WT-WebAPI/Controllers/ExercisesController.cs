@@ -204,7 +204,9 @@ namespace WT_WebAPI.Controllers
             {
                 return NotFound();
             }
-
+     
+            RemoveExerciseImage(userId, exerciseId);
+            
             return NoContent();
         }
 
@@ -269,6 +271,37 @@ namespace WT_WebAPI.Controllers
                 exerciseEntity.ImagePath = folderName + "/" + fileName;
 
                 await _repository.UpdateImageForExercise(exerciseEntity.ID, exerciseEntity.ImagePath);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(500, ex, ex.Message);
+                return false;
+            }
+
+        }
+
+        private bool RemoveExerciseImage(int? userId, int? exerciseId)
+        {
+            try
+            {
+                // get this environment's web root path (the path
+                // from which static content, like an image, is served)
+                var webRootPath = _hostingEnvironment.WebRootPath;
+                string folderName = "Images/Exercises/" + userId;
+                string fullFolderPath = $"{webRootPath}/{folderName}/";
+
+                // create path if not exists... write bytes and auto-close stream
+                FileInfo file = new FileInfo(fullFolderPath);
+                file.Directory.Create();
+
+                //delete previuos image
+                string[] fileList = Directory.GetFiles(fullFolderPath, $"*exercise_{exerciseId}*");
+                foreach (var fileToDelete in fileList)
+                {
+                    System.IO.File.Delete(fileToDelete);
+                }
 
                 return true;
             }

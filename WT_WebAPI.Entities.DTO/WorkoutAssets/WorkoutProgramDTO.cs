@@ -14,6 +14,7 @@ namespace WT_WebAPI.Entities.DTO.WorkoutAssets
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public bool IsActivated { get; set; }
+        public byte[] ImageBytes { get; set; }
 
         public int? WTUserID { get; set; }
 

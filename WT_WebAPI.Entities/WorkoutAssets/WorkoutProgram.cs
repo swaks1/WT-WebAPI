@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
 namespace WT_WebAPI.Entities.WorkoutAssets
@@ -14,6 +15,8 @@ namespace WT_WebAPI.Entities.WorkoutAssets
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public bool IsActivated { get; set; }
+        [NotMapped]
+        public byte[] ImageBytes { get; set; }
 
         public int? WTUserID { get; set; }
         public WTUser WTUser { get; set; }

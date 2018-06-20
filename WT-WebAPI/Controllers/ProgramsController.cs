@@ -1,8 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using WT_WebAPI.Common;
 using WT_WebAPI.Entities.DTO.WorkoutAssets;
 using WT_WebAPI.Entities.WorkoutAssets;
@@ -16,11 +20,16 @@ namespace WT_WebAPI.Controllers
     public class ProgramsController : Controller
     {
         private readonly ICommonRepository _repository;
+        private readonly IHostingEnvironment _hostingEnvironment;
+        private readonly ILogger<ProgramsController> _logger;
 
-        public ProgramsController(ICommonRepository repository)
+        public ProgramsController(ICommonRepository repository, IHostingEnvironment hostingEnvironment, ILogger<ProgramsController> logger)
         {
             _repository = repository;
+            _hostingEnvironment = hostingEnvironment;
+            _logger = logger;
         }
+
 
 
         [HttpGet("user/{userId}", Name = "GetPrograms")]
@@ -42,7 +51,20 @@ namespace WT_WebAPI.Controllers
                 return NotFound("Programs not found");
             }
 
-            var mappedPrograms = Mapper.Map<IEnumerable<WorkoutProgramDTO>>(programs);
+            var mappedPrograms = Mapper.Map<List<WorkoutProgramDTO>>(programs);
+            var programsList = programs.ToList();
+
+            //add the pllaned dates to each Routine
+            for (int i = 0; i < mappedPrograms.Count; i++) 
+            {
+                var mappedProgram = mappedPrograms[i];
+                var program = programsList[i];
+                mappedProgram.WorkoutRoutines
+                                .ToList()
+                                .ForEach(item => item.PlannedDates = program.RoutineProgramEntries
+                                                                                .FirstOrDefault(r => r.WorkoutRoutineID == item.ID)?.PlannedDates);
+            }
+
 
             return Ok(mappedPrograms);
         }
@@ -60,7 +82,7 @@ namespace WT_WebAPI.Controllers
                 return new UnprocessableEntityObjectResult(ModelState);
             }
 
-            var program = await _repository.GetProgram(userId,programId);
+            var program = await _repository.GetProgram(userId, programId);
 
             if (program == null)
             {
@@ -104,6 +126,12 @@ namespace WT_WebAPI.Controllers
                 return BadRequest("Add Failed for Prgram...");
             }
 
+            if (programEntity.ImageBytes != null && programEntity.ImageBytes.Length != 0)
+            {
+                var imageResult = await SaveProgramImage(programEntity);
+            }
+
+
             var programToReturn = Mapper.Map<WorkoutProgramDTO>(programEntity);
 
             return CreatedAtRoute(
@@ -145,6 +173,12 @@ namespace WT_WebAPI.Controllers
             {
                 return BadRequest("Update failed for program...");
             }
+
+            if (programEntity.ImageBytes != null && programEntity.ImageBytes.Length != 0)
+            {
+                var imageResult = await SaveProgramImage(programEntity);
+            }
+
 
             return NoContent();
         }
@@ -201,6 +235,8 @@ namespace WT_WebAPI.Controllers
                 return NotFound();
             }
 
+            RemoveProgramImage(userId, programId);
+
             return NoContent();
         }
 
@@ -249,6 +285,84 @@ namespace WT_WebAPI.Controllers
             }
 
             return NoContent();
+        }
+
+        private async Task<bool> SaveProgramImage(WorkoutProgram programEntity)
+        {
+            try
+            {
+                // get this environment's web root path (the path
+                // from which static content, like an image, is served)
+                var webRootPath = _hostingEnvironment.WebRootPath;
+                string folderName = "Images/Programs/" + programEntity.WTUserID.ToString();
+                string fullFolderPath = $"{webRootPath}/{folderName}/";
+
+                // create path if not exists... write bytes and auto-close stream
+                FileInfo file = new FileInfo(fullFolderPath);
+                file.Directory.Create();
+
+                // create the filename
+                string imageName = programEntity.ImagePath;
+                var imageExtension = imageName.Substring(imageName.LastIndexOf("."));
+
+                string fileName = "program_" + programEntity.ID + "_" + Guid.NewGuid() + imageExtension;
+
+                //delete previuos image
+                string[] fileList = Directory.GetFiles(fullFolderPath, $"*program_{programEntity.ID}*");
+                foreach (var fileToDelete in fileList)
+                {
+                    System.IO.File.Delete(fileToDelete);
+                }
+
+                // the full file path
+                var filePath = Path.Combine($"{fullFolderPath}/{fileName}");
+
+                System.IO.File.WriteAllBytes(filePath, programEntity.ImageBytes);
+
+                // fill out the filename
+                programEntity.ImagePath = folderName + "/" + fileName;
+
+                await _repository.UpdateImageForProgram(programEntity.ID, programEntity.ImagePath);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(500, ex, ex.Message);
+                return false;
+            }
+
+        }
+
+        private bool RemoveProgramImage(int? userId, int? programId)
+        {
+            try
+            {
+                // get this environment's web root path (the path
+                // from which static content, like an image, is served)
+                var webRootPath = _hostingEnvironment.WebRootPath;
+                string folderName = "Images/Programs/" + userId;
+                string fullFolderPath = $"{webRootPath}/{folderName}/";
+
+                // create path if not exists... write bytes and auto-close stream
+                FileInfo file = new FileInfo(fullFolderPath);
+                file.Directory.Create();
+
+                //delete previuos image
+                string[] fileList = Directory.GetFiles(fullFolderPath, $"*program_{programId}*");
+                foreach (var fileToDelete in fileList)
+                {
+                    System.IO.File.Delete(fileToDelete);
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(500, ex, ex.Message);
+                return false;
+            }
+
         }
 
 

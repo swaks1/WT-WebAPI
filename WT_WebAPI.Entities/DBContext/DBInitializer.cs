@@ -51,10 +51,10 @@ namespace WT_WebAPI.Entities.DBContext
 
             var programs = new WorkoutProgram[]
             {
-                new WorkoutProgram{Name = "Riste Program 1",Description = "Riste Program Desc 1", WTUserID = 1},
-                new WorkoutProgram{Name = "Riste Program 2",Description = "Riste Program Desc 2", WTUserID = 1},
-                new WorkoutProgram{Name = "Monkas Program 1",Description = "Monkas Program Desc 1", WTUserID = 2},
-                new WorkoutProgram{Name = "Monkas Program 1",Description = "Monkas Program Desc 2", WTUserID = 2},
+                new WorkoutProgram{Name = "Riste Program 1",Description = "Riste Program Desc 1", WTUserID = 1, ImagePath = "Images/monkasProgram.png"},
+                new WorkoutProgram{Name = "Riste Program 2",Description = "Riste Program Desc 2", WTUserID = 1, ImagePath = "Images/monkasProgram.png"},
+                new WorkoutProgram{Name = "Monkas Program 1",Description = "Monkas Program Desc 1", WTUserID = 2, ImagePath = "Images/monkasProgram.png"},
+                new WorkoutProgram{Name = "Monkas Program 1",Description = "Monkas Program Desc 2", WTUserID = 2, ImagePath = "Images/monkasProgram.png"},
             };
             context.WorkoutPrograms.AddRange(programs);
             context.SaveChanges();

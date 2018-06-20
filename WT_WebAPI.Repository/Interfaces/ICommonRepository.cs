@@ -97,6 +97,9 @@ namespace WT_WebAPI.Repository.Interfaces
         Task<bool> DeactivateProgram(int? userId, int? programId);
 
         Task<bool> DeactivateAllPrograms(int? userId);
+
+        Task<bool> UpdateImageForProgram(int Id, string imagePath);
+
         #endregion
 
 
@@ -147,6 +150,7 @@ namespace WT_WebAPI.Repository.Interfaces
         Task<BodyStatistic> AddOrUpdateBodyStatistic(int? userId, BodyStatistic bodyStat);
         
         Task<bool> DeleteBodyStatistic(int? userId, int? bodyStatId);
+
 
         #endregion
 

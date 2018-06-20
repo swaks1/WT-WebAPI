@@ -227,6 +227,8 @@ namespace WT_WebAPI.Controllers
                 return NotFound();
             }
 
+            RemoveRoutineImage(userId, routineId);
+
             return NoContent();
         }
 
@@ -252,7 +254,7 @@ namespace WT_WebAPI.Controllers
                 string fileName = "routine_" + routineEntity.ID + "_" + Guid.NewGuid() + imageExtension;
 
                 //delete previuos image
-                string[] fileList = Directory.GetFiles(fullFolderPath, $"*routine__{routineEntity.ID}*");
+                string[] fileList = Directory.GetFiles(fullFolderPath, $"*routine_{routineEntity.ID}*");
                 foreach (var fileToDelete in fileList)
                 {
                     System.IO.File.Delete(fileToDelete);
@@ -267,6 +269,37 @@ namespace WT_WebAPI.Controllers
                 routineEntity.ImagePath = folderName + "/" + fileName;
 
                 await _repository.UpdateImageForRoutine(routineEntity.ID, routineEntity.ImagePath);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(500, ex, ex.Message);
+                return false;
+            }
+
+        }
+
+        private bool RemoveRoutineImage(int? userId, int? routineId)
+        {
+            try
+            {
+                // get this environment's web root path (the path
+                // from which static content, like an image, is served)
+                var webRootPath = _hostingEnvironment.WebRootPath;
+                string folderName = "Images/Routines/" + userId;
+                string fullFolderPath = $"{webRootPath}/{folderName}/";
+
+                // create path if not exists... write bytes and auto-close stream
+                FileInfo file = new FileInfo(fullFolderPath);
+                file.Directory.Create();
+
+                //delete previuos image
+                string[] fileList = Directory.GetFiles(fullFolderPath, $"*routine_{routineId}*");
+                foreach (var fileToDelete in fileList)
+                {
+                    System.IO.File.Delete(fileToDelete);
+                }
 
                 return true;
             }
