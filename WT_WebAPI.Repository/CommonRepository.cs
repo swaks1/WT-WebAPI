@@ -645,7 +645,8 @@ namespace WT_WebAPI.Repository
                 var rpEntity = programEntity.RoutineProgramEntries.FirstOrDefault(a => a.WorkoutRoutineID == rp.WorkoutRoutineID);
                 if (rpEntity != null)
                 {
-                    rpEntity.PlannedDates = rp.PlannedDates;
+                    if(rp.PlannedDates != null)
+                        rpEntity.PlannedDates = rp.PlannedDates;
                 }
                 else
                 {
