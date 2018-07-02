@@ -214,6 +214,36 @@ namespace WT_WebAPI.Controllers
             return NoContent();
         }
 
+        [HttpPost("user/{userId}/program/{programId}/updateDatesForRoutine", Name = "UpdateDatesForRoutine")]
+        public async Task<IActionResult> UpdateDatesForRoutine([FromRoute]int? userId, [FromRoute] int? programId, [FromBody] WorkoutRoutineDTO routine)
+        {
+            if (userId == null || programId == null)
+            {
+                return BadRequest();
+            }
+            if (!ModelState.IsValid)
+            {
+                return new UnprocessableEntityObjectResult(ModelState);
+            }
+
+            var routineProgramEntriy =  new RoutineProgramEntry
+            {
+                WorkoutRoutineID = routine.ID,
+                WorkoutProgramID = programId,
+                PlannedDates = routine.PlannedDates
+            };
+
+            var result = await _repository.UpdateDatesForRoutine(userId, programId, routineProgramEntriy);
+
+            if (result == false)
+            {
+                return BadRequest("Update of Dates for Routine Failed...");
+            }
+
+
+            return NoContent();
+        }
+
 
         [HttpDelete("user/{userId}/program/{programId}", Name = "DeleteProgram")]
         public async Task<IActionResult> DeleteProgram([FromRoute] int? userId, [FromRoute] int? programId)

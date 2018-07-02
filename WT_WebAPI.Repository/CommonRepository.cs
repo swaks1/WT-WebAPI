@@ -289,12 +289,12 @@ namespace WT_WebAPI.Repository
 
         public async Task<bool> UpdateImageForExercise(int Id, string imagePath)
         {
-            var exerciseEntity = await _context.Exercises                                    
+            var exerciseEntity = await _context.Exercises
                                     .SingleOrDefaultAsync(e => e.ID == Id);
 
             if (exerciseEntity == null)
                 return false;
-          
+
             exerciseEntity.ImagePath = imagePath;
 
             await _context.SaveChangesAsync();
@@ -645,7 +645,7 @@ namespace WT_WebAPI.Repository
                 var rpEntity = programEntity.RoutineProgramEntries.FirstOrDefault(a => a.WorkoutRoutineID == rp.WorkoutRoutineID);
                 if (rpEntity != null)
                 {
-                    if(rp.PlannedDates != null)
+                    if (rp.PlannedDates != null)
                         rpEntity.PlannedDates = rp.PlannedDates;
                 }
                 else
@@ -667,6 +667,30 @@ namespace WT_WebAPI.Repository
                 return false;
 
             toBeAdded.ForEach(item => programEntity.RoutineProgramEntries.Add(item));
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> UpdateDatesForRoutine(int? userId, int? programId, RoutineProgramEntry routineProgramEntry)
+        {
+            var programEntity = await _context.WorkoutPrograms
+                            .Include(w => w.RoutineProgramEntries)
+                            .SingleOrDefaultAsync(w => w.ID == programId);
+
+            if (programEntity == null || programEntity.WTUserID != userId)
+            {
+                return false;
+            }
+
+            var rpEntity = programEntity.RoutineProgramEntries.FirstOrDefault(a => a.WorkoutRoutineID == routineProgramEntry.WorkoutRoutineID);
+            if (rpEntity == null)
+            {
+                return false;
+            }
+
+            rpEntity.PlannedDates = routineProgramEntry.PlannedDates;
 
             await _context.SaveChangesAsync();
 
@@ -706,6 +730,9 @@ namespace WT_WebAPI.Repository
 
             foreach (var entry in program.RoutineProgramEntries)
             {
+                if (entry.PlannedDates == null || string.IsNullOrEmpty(entry.PlannedDates))
+                    continue;
+
                 var plannedDatesStrings = entry.PlannedDates.Split(";").ToList();
                 var plannedDates = new List<DateTime>();
                 foreach (var dateStr in plannedDatesStrings)
@@ -757,6 +784,9 @@ namespace WT_WebAPI.Repository
 
             foreach (var entry in program.RoutineProgramEntries)
             {
+                if (entry.PlannedDates == null || string.IsNullOrEmpty(entry.PlannedDates))
+                    continue;
+
                 var plannedDatesStrings = entry.PlannedDates.Split(";").ToList();
                 var plannedDates = new List<DateTime>();
                 foreach (var dateStr in plannedDatesStrings)
@@ -769,8 +799,13 @@ namespace WT_WebAPI.Repository
                     plannedDates.Add(date);
                 }
 
+                var now = DateTime.Now;
+
                 foreach (var date in plannedDates)
                 {
+                    if (date < DateTime.Now)
+                        continue;
+
                     var session = await GetSessionForDay(userId, date);
 
                     foreach (var cExercise in session.ConcreteExercises)
@@ -1072,7 +1107,7 @@ namespace WT_WebAPI.Repository
             foreach (var id in routineIds)
             {
                 var concreteExerciseEntities = sessionEntity.ConcreteExercises.Where(item => item.RoutineId == id);
-                foreach(var concreteExerciseEntity in concreteExerciseEntities)
+                foreach (var concreteExerciseEntity in concreteExerciseEntities)
                 {
                     _context.ConcreteExerciseAttribute.RemoveRange(concreteExerciseEntity.Attributes);
                     _context.Remove(concreteExerciseEntity);
@@ -1126,7 +1161,7 @@ namespace WT_WebAPI.Repository
                                                     && s.Week == bodyStat.Week
                                                     && s.Year == bodyStat.Year && s.Month == bodyStat.Month);
             //if doesnt exist create it
-            if(bodyStatEntity == null)
+            if (bodyStatEntity == null)
             {
                 bodyStatEntity = new BodyStatistic
                 {
@@ -1140,7 +1175,7 @@ namespace WT_WebAPI.Repository
                 await _context.SaveChangesAsync();
             }
 
-            var newAttributesIds = bodyStat.BodyStatAttributes.Select(item => item.ID);    
+            var newAttributesIds = bodyStat.BodyStatAttributes.Select(item => item.ID);
 
             //remove attributes that arent present
             var attrToBeRemoved = bodyStatEntity.BodyStatAttributes.Where(attr => !newAttributesIds.Any(id => id == attr.ID)).ToList();
@@ -1219,7 +1254,7 @@ namespace WT_WebAPI.Repository
             {
                 _context.Remove(item);
             }
-            foreach(var item in bodyStatistic.ProgressImages)
+            foreach (var item in bodyStatistic.ProgressImages)
             {
                 _context.Remove(item);
             }
@@ -1230,6 +1265,7 @@ namespace WT_WebAPI.Repository
 
             return true;
         }
+
 
         #endregion
     }

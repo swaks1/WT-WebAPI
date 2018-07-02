@@ -90,6 +90,8 @@ namespace WT_WebAPI.Repository.Interfaces
 
         Task<bool> UpdateRoutinesForProgram(WorkoutProgram programEntity, List<RoutineProgramEntry> routinePrograms);
 
+        Task<bool> UpdateDatesForRoutine(int? userId, int? programId, RoutineProgramEntry routineProgramEntry);
+
         Task<bool> DeleteProgram(int? userId, int? programId);
 
         Task<bool> ActivateProgram(int? userId, int? programId);
@@ -150,7 +152,7 @@ namespace WT_WebAPI.Repository.Interfaces
         Task<BodyStatistic> AddOrUpdateBodyStatistic(int? userId, BodyStatistic bodyStat);
         
         Task<bool> DeleteBodyStatistic(int? userId, int? bodyStatId);
-
+        
 
         #endregion
 
