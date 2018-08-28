@@ -1,8 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using WT_WebAPI.Common;
 using WT_WebAPI.Entities.DTO.Requests;
 using WT_WebAPI.Entities.DTO.WorkoutAssets;
@@ -19,10 +23,14 @@ namespace WT_WebAPI.Controllers
     public class BodyStatisticsController : Controller
     {
         private readonly ICommonRepository _repository;
+        private readonly IHostingEnvironment _hostingEnvironment;
+        private readonly ILogger<BodyStatisticsController> _logger;
 
-        public BodyStatisticsController(ICommonRepository repository)
+        public BodyStatisticsController(ICommonRepository repository, IHostingEnvironment hostingEnvironment, ILogger<BodyStatisticsController> logger)
         {
             _repository = repository;
+            _hostingEnvironment = hostingEnvironment;
+            _logger = logger;
         }
 
 
@@ -74,10 +82,10 @@ namespace WT_WebAPI.Controllers
             return Ok(mappedBodyStat);
         }
 
-        [HttpGet("user/{userId}/BodyStat/ForMonth/{month}", Name = "GetBodyStatisticsForMonth")]
-        public async Task<IActionResult> GetBodyStatisticsForMonth([FromRoute]int? userId, [FromRoute]int? month)
+        [HttpGet("user/{userId}/BodyStat/ForMonth/{month}/year/{year}", Name = "GetBodyStatisticsForMonth")]
+        public async Task<IActionResult> GetBodyStatisticsForMonth([FromRoute]int? userId, [FromRoute]int? month, [FromRoute]int? year)
         {
-            if (userId == null || month == null)
+            if (userId == null || month == null || year == null)
             {
                 return BadRequest();
             }
@@ -86,7 +94,7 @@ namespace WT_WebAPI.Controllers
                 return new UnprocessableEntityObjectResult(ModelState);
             }
 
-            var bodyStats = await _repository.GetBodyStatisticForMonth(userId, month);
+            var bodyStats = await _repository.GetBodyStatisticForMonth(userId, month, year);
 
             if (bodyStats == null)
             {
@@ -125,6 +133,12 @@ namespace WT_WebAPI.Controllers
                 return BadRequest("Add Failed for Body Statistic...");
             }
 
+            if (bodyStatEntity.ImageBytes != null && bodyStatEntity.ImageBytes.Length != 0)
+            {
+                bodyStatEntity.ID = result.ID;
+                var imageResult = await SaveStatisticImage(bodyStatEntity);
+            }
+
             var bodyStatToReturn = Mapper.Map<BodyStatisticDTO>(result);
 
             return CreatedAtRoute(
@@ -159,7 +173,6 @@ namespace WT_WebAPI.Controllers
 
             return NoContent();
         }
-
 
 
 
@@ -217,6 +230,55 @@ namespace WT_WebAPI.Controllers
                                 userId = userId,
                             },
                             value: bodyAttributeTemplatesToreturn);
+
+        }
+
+
+
+        private async Task<bool> SaveStatisticImage(BodyStatistic statisticEntity)
+        {
+            try
+            {
+                // get this environment's web root path (the path
+                // from which static content, like an image, is served)
+                var webRootPath = _hostingEnvironment.WebRootPath;
+                string folderName = "Images/Statistics/" + statisticEntity.WTUserID.ToString();
+                string fullFolderPath = $"{webRootPath}/{folderName}/";
+
+                // create path if not exists... write bytes and auto-close stream
+                FileInfo file = new FileInfo(fullFolderPath);
+                file.Directory.Create();
+
+                // create the filename
+                string imageName = statisticEntity.ImagePath;
+                var imageExtension = imageName.Substring(imageName.LastIndexOf("."));
+
+                string fileName = "statistic_" + statisticEntity.ID + "_" + Guid.NewGuid() + imageExtension;
+
+                //delete previuos image
+                string[] fileList = Directory.GetFiles(fullFolderPath, $"*statistic_{statisticEntity.ID}*");
+                foreach (var fileToDelete in fileList)
+                {
+                    System.IO.File.Delete(fileToDelete);
+                }
+
+                // the full file path
+                var filePath = Path.Combine($"{fullFolderPath}/{fileName}");
+
+                System.IO.File.WriteAllBytes(filePath, statisticEntity.ImageBytes);
+
+                // fill out the filename
+                statisticEntity.ImagePath = folderName + "/" + fileName;
+
+                await _repository.UpdateImageForStatistic(statisticEntity.ID, statisticEntity.ImagePath);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(500, ex, ex.Message);
+                return false;
+            }
 
         }
 

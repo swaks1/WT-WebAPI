@@ -12,8 +12,8 @@ using WT_WebAPI.Entities.WorkoutAssets;
 namespace WT_WebAPI.Entities.Migrations
 {
     [DbContext(typeof(WorkoutTrackingDBContext))]
-    [Migration("20180525030208_initial")]
-    partial class initial
+    [Migration("20180828163103_addedImagePath")]
+    partial class addedImagePath
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -224,6 +224,26 @@ namespace WT_WebAPI.Entities.Migrations
                     b.ToTable("WorkoutSessions");
                 });
 
+            modelBuilder.Entity("WT_WebAPI.Entities.WorkoutProgress.BodyAttributeTemplate", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("AttributeName");
+
+                    b.Property<string>("AttributeValue");
+
+                    b.Property<bool>("IsDeletable");
+
+                    b.Property<int?>("WTUserID");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("WTUserID");
+
+                    b.ToTable("BodyAttributeTemplates");
+                });
+
             modelBuilder.Entity("WT_WebAPI.Entities.WorkoutProgress.BodyStatAttribute", b =>
                 {
                     b.Property<int>("ID")
@@ -250,6 +270,8 @@ namespace WT_WebAPI.Entities.Migrations
                         .ValueGeneratedOnAdd();
 
                     b.Property<DateTime?>("DateCreated");
+
+                    b.Property<string>("ImagePath");
 
                     b.Property<int>("Month");
 
@@ -382,6 +404,13 @@ namespace WT_WebAPI.Entities.Migrations
                 {
                     b.HasOne("WT_WebAPI.Entities.WTUser", "User")
                         .WithMany("WorkoutSession")
+                        .HasForeignKey("WTUserID");
+                });
+
+            modelBuilder.Entity("WT_WebAPI.Entities.WorkoutProgress.BodyAttributeTemplate", b =>
+                {
+                    b.HasOne("WT_WebAPI.Entities.WTUser", "User")
+                        .WithMany("BodyAttributeTemplates")
                         .HasForeignKey("WTUserID");
                 });
 

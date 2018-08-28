@@ -143,7 +143,7 @@ namespace WT_WebAPI.Repository.Interfaces
 
         Task<BodyStatistic> GetBodyStatistic(int? userId, int? bodyStatId);
 
-        Task<IEnumerable<BodyStatistic>> GetBodyStatisticForMonth(int? userId, int? month);
+        Task<IEnumerable<BodyStatistic>> GetBodyStatisticForMonth(int? userId, int? month, int? year);
 
         Task<IEnumerable<BodyAttributeTemplate>> GetAttributeTemplatesForUser(int? userId);
 
@@ -152,6 +152,8 @@ namespace WT_WebAPI.Repository.Interfaces
         Task<BodyStatistic> AddOrUpdateBodyStatistic(int? userId, BodyStatistic bodyStat);
         
         Task<bool> DeleteBodyStatistic(int? userId, int? bodyStatId);
+
+        Task<bool> UpdateImageForStatistic(int iD, string imagePath);
         
 
         #endregion

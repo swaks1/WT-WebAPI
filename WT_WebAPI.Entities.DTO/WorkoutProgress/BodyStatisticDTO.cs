@@ -15,6 +15,8 @@ namespace WT_WebAPI.Entities.DTO.WorkoutProgress
 
         public ICollection<BodyStatAttributeDTO> BodyStatAttributes { get; set; }
         public ICollection<ProgressImageDTO> ProgressImages { get; set; }
+        public string ImagePath { get; set; }
+        public byte[] ImageBytes { get; set; }
 
         public int? WTUserID { get; set; }
     }

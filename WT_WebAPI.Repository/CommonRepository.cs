@@ -1142,13 +1142,13 @@ namespace WT_WebAPI.Repository
                                 .SingleOrDefaultAsync(w => w.ID == bodyStatId && w.WTUserID == userId);
         }
 
-        public async Task<IEnumerable<BodyStatistic>> GetBodyStatisticForMonth(int? userId, int? month)
+        public async Task<IEnumerable<BodyStatistic>> GetBodyStatisticForMonth(int? userId, int? month, int? year)
         {
             return await _context.BodyStatistics
                              .AsNoTracking()
                              .Include(w => w.BodyStatAttributes)
                              .Include(c => c.ProgressImages)
-                             .Where(w => w.WTUserID == userId && w.Month == month)
+                             .Where(w => w.WTUserID == userId && w.Month == month && w.Year == year)
                              .ToListAsync();
         }
 
@@ -1260,6 +1260,21 @@ namespace WT_WebAPI.Repository
             }
 
             _context.Remove(bodyStatistic);
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> UpdateImageForStatistic(int Id, string imagePath)
+        {
+            var statistic = await _context.BodyStatistics
+                        .SingleOrDefaultAsync(e => e.ID == Id);
+
+            if (statistic == null)
+                return false;
+
+            statistic.ImagePath = imagePath;
 
             await _context.SaveChangesAsync();
 
