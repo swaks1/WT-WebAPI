@@ -1,9 +1,9 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using IdentityServer4.AccessTokenValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
@@ -37,17 +37,29 @@ namespace WT_WebAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<WorkoutTrackingDBContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
-
-
-
-            services.AddScoped<ICommonRepository, CommonRepository>();
-
             services.AddMvc().AddJsonOptions(options =>
             {
                 options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
                 options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
             }); ;
+
+
+
+
+            services.AddAuthentication(
+                IdentityServerAuthenticationDefaults.AuthenticationScheme)
+                .AddIdentityServerAuthentication(options =>
+                {
+                    options.Authority = Helper.IdentityServerUrl;
+                    options.ApiName = "wtapi";
+                    options.ApiSecret = "apisecret";
+                });
+
+
+
+            services.AddDbContext<WorkoutTrackingDBContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
+            services.AddScoped<ICommonRepository, CommonRepository>();
 
             services.AddAutoMapper(x => x.AddProfile(new MappingsProfile()));
 
@@ -101,6 +113,8 @@ namespace WT_WebAPI
             });
 
             #endregion
+
+            app.UseAuthentication();
 
             app.UseStaticFiles();
 

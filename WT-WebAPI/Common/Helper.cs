@@ -7,5 +7,6 @@ namespace WT_WebAPI.Common
 {
     public static class Helper
     {
+        public static string IdentityServerUrl = "https://localhost:44352/";
     }
 }

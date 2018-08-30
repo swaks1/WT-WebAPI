@@ -3,8 +3,8 @@
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
     "iisExpress": {
-      "applicationUrl": "http://localhost:51220/",
-      "sslPort": 0
+      "applicationUrl": "https://localhost:44333/",
+      "sslPort": 44333
     }
   },
   "profiles": {
@@ -27,21 +27,20 @@
       "applicationUrl": "http://localhost:51221/"
     },
     "Kestrel Development": {
-      "executablePath": "dotnet run",
       "commandName": "Project",
+      "executablePath": "dotnet run",
       "environmentVariables": {
         "ASPNETCORE_URLS": "http://localhost:8080",
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
     "Kestrel Production": {
-      "executablePath": "dotnet run",
       "commandName": "Project",
+      "executablePath": "dotnet run",
       "environmentVariables": {
         "ASPNETCORE_URLS": "http://localhost:8080",
         "ASPNETCORE_ENVIRONMENT": "Production"
       }
     }
-
   }
 }

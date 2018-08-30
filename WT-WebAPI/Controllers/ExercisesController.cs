@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -16,6 +17,7 @@ namespace WT_WebAPI.Controllers
 {
     [Produces("application/json")]
     [Route("api/Exercises")]
+    [Authorize]
     public class ExercisesController : Controller
     {
         private readonly ICommonRepository _repository;
@@ -31,12 +33,22 @@ namespace WT_WebAPI.Controllers
         }
 
         [HttpGet("user/{userId}", Name = "GetExercises")]
+        //[Authorize(Roles="Admin")] just for example that the api can be authorized with roles also
         public async Task<IActionResult> GetExercises([FromRoute]int? userId)
         {
             if (userId == null)
             {
                 return BadRequest();
             }
+
+            //LOGIC TO CHECK IF THE USER AUTHENTICATED IS THE SAME AS THE ONE LOOKING FOR EXERCISES.. Should be used in every action
+            //var _authUserId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
+            //var authUserId = int.Parse(_authUserId);
+            //if(authUserId != userId)
+            //{
+            //    return Unauthorized();
+            //}
+
             if (!ModelState.IsValid)
             {
                 return new UnprocessableEntityObjectResult(ModelState);
